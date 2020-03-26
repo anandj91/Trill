@@ -68,6 +68,7 @@ namespace Microsoft.StreamProcessing
 
         public void OnNext(StreamMessage<TKey, TSpray> batch)
         {
+            Print("Spray", batch);
             if (this.multicast)
             {
                 for (int i = 0; i < this.totalBranches; i++)

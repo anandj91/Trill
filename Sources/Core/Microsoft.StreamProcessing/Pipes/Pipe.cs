@@ -117,6 +117,26 @@ namespace Microsoft.StreamProcessing
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Print<K, T>(string msg, StreamMessage<K, T> batch)
+        {
+            try
+            {
+                for (int i = 0; i < batch.Count; i++)
+                {
+                    Console.WriteLine("{0} - " + msg + ": {1}, {2} ", this.GetHashCode(), batch.key.col[i].ToString(), batch.payload.col[i].ToString());
+                }
+                Console.Out.Flush();
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         protected virtual void DisposeState() { }
 
         /// <summary>
@@ -125,6 +145,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void OnFlush()
         {
+            Console.WriteLine("{0} - OnFlush Pipe {1}", this.GetHashCode(), this.ToString());
             FlushContents();
             this.Observer.OnFlush();
         }

@@ -137,6 +137,7 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> batch)
         {
+            Print("UngroupPipe", batch);
             outPool.Get(out StreamMessage<TOuterKey, TResult> tmp);
             tmp.AllocatePayload();
             outPool.GetKey(out tmp.key);

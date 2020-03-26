@@ -119,6 +119,7 @@ namespace Microsoft.StreamProcessing
         // merge sort algorithm to ensure that Consume* methods are called in sync time order
         private void OnLeft(StreamMessage<TKey, TLeft> batch)
         {
+            // Print("OnLeft", batch);
             batch.iter = 0;
             batch.RefreshCount();
             if (batch.Count == 0)
@@ -133,6 +134,7 @@ namespace Microsoft.StreamProcessing
 
         private void OnRight(StreamMessage<TKey, TRight> batch)
         {
+            // Print("OnRight", batch);
             batch.iter = 0;
             batch.RefreshCount();
             if (batch.Count == 0)
@@ -263,6 +265,8 @@ namespace Microsoft.StreamProcessing
                             break;
                         }
 
+                        // Console.WriteLine("{2} - leftDone: {0}, rightDone: {1}", leftBatchDone, rightBatchDone, this.GetHashCode());
+                        // Console.WriteLine("{2} - leftFree: {0}, rightFree: {1}", leftBatchFree, rightBatchFree, this.GetHashCode());
                         if (leftBatchDone)
                         {
                             this.leftQueue.TryDequeue(out leftBatch);

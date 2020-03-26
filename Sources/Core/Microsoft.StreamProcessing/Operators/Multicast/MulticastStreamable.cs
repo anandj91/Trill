@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing
         private readonly IStreamable<TKey, TSource> source;
         private readonly Func<IStreamable<TKey, TSource>, IStreamable<TKey, TResult>> selector;
 
-        public MulticastStreamable(IStreamable<TKey, TSource> source, Func<IStreamable<TKey, TSource>, IStreamable<TKey, TResult>> selector)
+        public MulticastStreamable(IStreamable<TKey, TSource> source, Func<IStreamable<TKey, TSource>, IStreamable<TKey, TResult>> selector, bool final = false)
             : base(source.Properties.Derive(selector))
         {
             Contract.Requires(source != null);

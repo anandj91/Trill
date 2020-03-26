@@ -11,10 +11,14 @@ namespace Microsoft.StreamProcessing
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
                           = new SafeConcurrentDictionary<Tuple<Type, string>>();
+        public bool final;
 
-        public UnionStreamable(IStreamable<TKey, TPayload> left, IStreamable<TKey, TPayload> right, bool registerInputs = false)
+        public UnionStreamable(IStreamable<TKey, TPayload> left, IStreamable<TKey, TPayload> right, bool registerInputs = false, bool final = false)
             : base(left.Properties.Union(right.Properties), left, right, registerInputs)
-            => Initialize();
+        {
+            Initialize();
+            this.final = final;
+        }
 
         protected override IBinaryObserver<TKey, TPayload, TPayload, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
@@ -22,7 +26,7 @@ namespace Microsoft.StreamProcessing
             if (part == null)
             {
                 if (this.Left.Properties.IsColumnar && this.Right.Properties.IsColumnar) return GetPipe(observer);
-                else return new UnionPipe<TKey, TPayload>(this, observer);
+                else return new UnionPipe<TKey, TPayload>(this, observer, this.final);
             }
 
             var outputType = typeof(PartitionedUnionPipe<,,>).MakeGenericType(

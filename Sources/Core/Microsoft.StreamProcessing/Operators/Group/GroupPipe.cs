@@ -145,6 +145,7 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<TOuterKey, TSource> batch)
         {
+            Print("GrouPipe", batch);
             this.l1Pool.Get(out StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> outputBatch);
             outputBatch.vsync = batch.vsync;
             outputBatch.vother = batch.vother;

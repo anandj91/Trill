@@ -138,7 +138,7 @@ namespace Microsoft.StreamProcessing
                         mergeInputs = new Streamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[reduceArity];
                         mergeInputs = new MultiUnionStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[reduceArity];
                         for (int i = 0; i < reduceArity; i++)
-                            mergeInputs[i] = new MultiUnionStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>(shuffleL1Results);
+                            mergeInputs[i] = new MultiUnionStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>(shuffleL1Results, final: true);
                     }
 
                     // [5] perform the apply lambda on each L2 core
@@ -149,12 +149,12 @@ namespace Microsoft.StreamProcessing
 
                     for (int i = 0; i < mergeInputs.Length; i++)
                     {
-                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(mergeInputs[i], this.reducer);
+                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(mergeInputs[i], this.reducer, final: true);
                         ungroupInnerResults[i] = new UngroupStreamable<TMapKey, TReduceKey, TBind, TOutput>(this.sourceLeft.Properties.KeyEqualityComparer, innerResults[i], this.resultSelector);
                     }
 
                     // [6] final single merging union
-                    var union = new MultiUnionStreamable<TMapKey, TOutput>(ungroupInnerResults, false);
+                    var union = new MultiUnionStreamable<TMapKey, TOutput>(ungroupInnerResults, false, final: false);
 
                     return union.Subscribe(observer);
                 }

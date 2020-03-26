@@ -405,6 +405,7 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<TOuterKey, TSource> batch)
         {
+            Print(this.shuffleId + " ShufflePipe", batch);
             var count = batch.Count;
             var srckey = batch.key.col;
             fixed (long* src_bv = batch.bitvector.col)
@@ -454,6 +455,7 @@ namespace Microsoft.StreamProcessing
                         var hash = src_hash[i] ^ innerHash;
 
                         var index = hash & this.totalBranchesL2Mask;
+                        Console.WriteLine("{2} - Key: {0}, Index: {1}", key, index, this.GetHashCode());
                         var b = this.batches[index];
 
                         var x = b.Count;
@@ -523,6 +525,7 @@ namespace Microsoft.StreamProcessing
                         var hash = src_hash[i] ^ innerHash;
 
                         var index = (hash & 0x7fffffff) % this.totalBranchesL2;
+                        Console.WriteLine("{2} - Key: {0}, Index: {1}", key, index, this.GetHashCode());
                         var b = this.batches[index];
 
                         var x = b.Count;

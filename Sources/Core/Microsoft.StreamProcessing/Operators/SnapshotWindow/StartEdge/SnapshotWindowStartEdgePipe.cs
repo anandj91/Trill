@@ -87,6 +87,7 @@ namespace Microsoft.StreamProcessing
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
+            Print("Window", batch);
             var count = batch.Count;
             var colkey = batch.key.col;
             var colpayload = batch.payload.col;
@@ -214,6 +215,7 @@ namespace Microsoft.StreamProcessing
         {
             if (this.batch == null || this.batch.Count == 0) return;
             this.batch.Seal();
+            Print("WindowFlush", this.batch);
             this.Observer.OnNext(this.batch);
             this.pool.Get(out this.batch);
             this.batch.Allocate();

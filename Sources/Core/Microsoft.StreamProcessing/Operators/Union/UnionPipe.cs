@@ -23,16 +23,20 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long nextRightTime = long.MinValue;
 
+        private bool final;
+
         [Obsolete("Used only by serialization. Do not call directly.")]
         public UnionPipe() { }
 
-        public UnionPipe(Streamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
+        public UnionPipe(Streamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, bool final = false)
             : base(stream, observer)
         {
+            Console.WriteLine("{0}, {1} -> {2}", this.Left.GetHashCode(), this.Right.GetHashCode(), this.GetHashCode());
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
             this.output.Allocate();
+            this.final = final;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,6 +45,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ProcessBothBatches(StreamMessage<TKey, TPayload> leftBatch, StreamMessage<TKey, TPayload> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
         {
+            if (final)
+            {
+                Print("ProcessBothLeft", leftBatch);
+                Print("ProcessBothRight", rightBatch);
+            }
             leftBatchFree = rightBatchFree = true;
 
             long lastLeftTime = -1;
@@ -127,6 +136,10 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ProcessLeftBatch(StreamMessage<TKey, TPayload> batch, out bool isBatchDone, out bool isBatchFree)
         {
+            if (final)
+            {
+                Print("ProcessLeft", batch);
+            }
             isBatchFree = true;
             if (batch.iter == 0)
             {
@@ -164,6 +177,10 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ProcessRightBatch(StreamMessage<TKey, TPayload> batch, out bool isBatchDone, out bool isBatchFree)
         {
+            if (final)
+            {
+                Print("ProcessRight", batch);
+            }
             isBatchFree = true;
             if (batch.iter == 0)
             {
@@ -260,6 +277,10 @@ namespace Microsoft.StreamProcessing
             this.lastCTI = updatedCTI;
 
             FlushContents();
+            if (final)
+            {
+                Print("OutputBatch", batch);
+            }
             this.Observer.OnNext(batch);
         }
 
@@ -274,6 +295,10 @@ namespace Microsoft.StreamProcessing
         {
             if (this.output.Count == 0) return;
             this.output.Seal();
+            if (final)
+            {
+                Print("Flush", this.output);
+            }
             this.Observer.OnNext(this.output);
             this.pool.Get(out this.output);
             this.output.Allocate();

@@ -109,7 +109,23 @@ namespace Microsoft.StreamProcessing
             var cid = o.ClassId;
             if (this.useCommonSprayPool && (classId != null)) cid = classId.Value;
 
-            var t = new TaskEntry(cid, m => o.OnNext((StreamMessage<TK, TP>)m), o.OnCompleted, o.OnFlush, o.OnError);
+            var t = new TaskEntry(cid, m =>
+            {
+                var msg = (StreamMessage<TK, TP>)m;
+                try
+                {
+                    for (int i = 0; i < msg.Count; i++)
+                    {
+                        // Console.WriteLine("Message to {0}: {1} {2}", o.GetHashCode(), msg.payload.col[i].ToString(), o.ToString());
+                    }
+                    Console.Out.Flush();
+                }
+                catch
+                {
+
+                }
+                o.OnNext((StreamMessage<TK, TP>)m);
+            }, o.OnCompleted, o.OnFlush, o.OnError);
 
             this.taskTable.TryAdd(cid, t);
 
@@ -151,6 +167,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public void Join() => this.thread.Join();
+
 
         public void Run(object obj)
         {

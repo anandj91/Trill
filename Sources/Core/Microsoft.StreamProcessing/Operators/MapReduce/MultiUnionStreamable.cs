@@ -13,13 +13,15 @@ namespace Microsoft.StreamProcessing
         public IStreamable<TKey, TSource>[] Sources;
         private readonly bool registerScheduler;
         private readonly Func<IStreamable<TKey, TSource>, IStreamable<TKey, TSource>, bool, IStreamable<TKey, TSource>> constructor;
+        private bool final;
 
-        public MultiUnionStreamable(IStreamable<TKey, TSource>[] sources, bool register = true, bool guaranteedDisjoint = false)
+        public MultiUnionStreamable(IStreamable<TKey, TSource>[] sources, bool register = true, bool guaranteedDisjoint = false, bool final = false)
             : base(sources.Skip(1).Select(o => o.Properties).Aggregate(sources[0].Properties, (r, p) => r.Union(p)))
         {
             Invariant.IsNotNull(sources, "sources");
             Invariant.IsPositive(sources.Length, "sources.Length");
             Invariant.IsNotNull(sources[0], "sources[0]");
+            this.final = final;
 
             this.Sources = sources;
             this.registerScheduler = register;
@@ -72,7 +74,7 @@ namespace Microsoft.StreamProcessing
 
                 currentLength = i;
             }
-
+            ((UnionStreamable<TKey, TSource>)currentSources[0]).final = final;
             if (!(obs is IDisposable d))
                 return currentSources[0].Subscribe(obs);
             else
