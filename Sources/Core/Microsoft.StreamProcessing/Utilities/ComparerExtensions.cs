@@ -56,6 +56,23 @@ namespace Microsoft.StreamProcessing
             return new EqualityComparerExpression<T>(equalsTemplate.InlineCalls(), hashTemplate.InlineCalls());
         }
 
+        public static IEqualityComparerExpression<T> GetEqualityComparerExpression<T, T1>(
+            Expression<Func<T, T1>> lambda1, IEqualityComparerExpression<T1> iece1)
+        {
+            var iece1EqualsExpr = iece1.GetEqualsExpr();
+            Expression<Func<T, T, bool>> equalsTemplate =
+                (left, right) =>
+                    CallInliner.Call(iece1EqualsExpr, CallInliner.Call(lambda1, left),
+                        CallInliner.Call(lambda1, right));
+
+            var iece1HashExpr = iece1.GetGetHashCodeExpr();
+            Expression<Func<T, int>> hashTemplate =
+                value =>
+                    CallInliner.Call(iece1HashExpr, CallInliner.Call(lambda1, value));
+
+            return new EqualityComparerExpression<T>(equalsTemplate.InlineCalls(), hashTemplate.InlineCalls());
+        }
+
         public static bool ExpressionEquals(this Expression source, Expression other)
             => EqualityComparer.IsEqual(source, other);
 

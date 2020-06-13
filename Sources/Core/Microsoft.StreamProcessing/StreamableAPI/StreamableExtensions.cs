@@ -416,6 +416,26 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Stitch with aggregate.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TState"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="aggregate"></param>
+        /// <returns></returns>
+        public static IStreamable<TKey, TResult> StitchAggregate<TKey, TPayload, TState, TResult>(
+            this IStreamable<TKey, TPayload> source,
+            Func<Window<TKey, TPayload>, IAggregate<TPayload, TState, TResult>> aggregate)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+
+            return new StitchAggregateStreamable<TKey, TPayload, TState, TResult>(source,
+                aggregate(new Window<TKey, TPayload>(source.Properties)));
+        }
+
+        /// <summary>
         /// Union is a temporal union that combines two streams of like schema
         /// </summary>
         /// <param name="left">Left source streamable for the operation.</param>

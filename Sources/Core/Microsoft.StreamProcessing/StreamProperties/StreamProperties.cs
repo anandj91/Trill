@@ -865,6 +865,26 @@ namespace Microsoft.StreamProcessing
             }
         }
 
+        internal StreamProperties<TKey, TResult> StitchAggregate<TState, TResult>
+            (IAggregate<TPayload, TState, TResult> aggregate)
+        {
+            var newEqualityComparerSelectorMap = new Dictionary<Expression, object>();
+            var newPayloadEqualityComparer = EqualityComparerExpression<TResult>.Default;
+
+            var newSortSelectorMap = new Dictionary<Expression, Guid?>();
+            return new StreamProperties<TKey, TResult>(
+                false,
+                false, null,
+                false, null, null,
+                false, true,
+                false, true, this.KeyEqualityComparer,
+                newPayloadEqualityComparer,
+                null,
+                null,
+                newEqualityComparerSelectorMap,
+                newSortSelectorMap, this.QueryContainer);
+        }
+
         internal StreamProperties<TKey, TPayload> PointAtEnd()
         {
             var temp = ToConstantDuration(true, 1);
