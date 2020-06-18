@@ -1403,5 +1403,29 @@ namespace Microsoft.StreamProcessing
             var aggregate = new AverageSquareNullableComplexAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
+
+        /// <summary>
+        /// An aggregate that combines results of other two aggregates
+        /// </summary>
+        /// <param name="agg1">First aggregate function</param>
+        /// <param name="agg2">Second aggregate function</param>
+        /// <param name="resultSelector">Result selector</param>
+        /// <typeparam name="T">Input type</typeparam>
+        /// <typeparam name="S1">State type of first aggregate</typeparam>
+        /// <typeparam name="S2">State type of second aggregate</typeparam>
+        /// <typeparam name="R1">Result type of first aggregate</typeparam>
+        /// <typeparam name="R2">Result type of second aggregate</typeparam>
+        /// <typeparam name="R">Joined result type</typeparam>
+        /// <returns></returns>
+        public JoinedAggregate<T, S1, S2, R1, R2, R> JoinedAggregate<T, S1, S2, R1, R2, R>(
+            IAggregate<T, S1, R1> agg1,
+            IAggregate<T, S2, R2> agg2,
+            Func<R1, R2, R> resultSelector
+        )
+        {
+            Invariant.IsNotNull(agg1, nameof(agg1));
+            Invariant.IsNotNull(agg2, nameof(agg2));
+            return new JoinedAggregate<T, S1, S2, R1, R2, R>(agg1, agg2, resultSelector);
+        }
     }
 }
