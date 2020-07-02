@@ -58,5 +58,14 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public override void Next() => Idx++;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override BStreamable<TPayload> Clone()
+        {
+            return new InputBStream<TKey, TPayload>(Batch, Period, Offset, Idx);
+        }
     }
 }

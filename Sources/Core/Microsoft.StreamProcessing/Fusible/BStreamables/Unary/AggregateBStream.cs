@@ -16,7 +16,9 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         protected long Window;
+
         private long Counter;
+        private IAggregate<TPayload, TState, TResult> Aggregate;
         private Func<TState> Init;
         private Func<TState, long, TPayload, TState> Acc;
         private Func<TState, TResult> Res;
@@ -25,7 +27,6 @@ namespace Microsoft.StreamProcessing
 
         private (long t, TState s) State;
         private Queue<(long t, TState s)> States;
-        private int Size;
 
         /// <summary>
         /// 
@@ -42,15 +43,15 @@ namespace Microsoft.StreamProcessing
         ) : base(stream, period, offset)
         {
             Window = window;
-            Counter = BeatCorrection(stream.GetSyncTime());
+            Aggregate = aggregate;
             Init = aggregate.InitialState().Compile();
             Acc = aggregate.Accumulate().Compile();
             Res = aggregate.ComputeResult().Compile();
             Deacc = aggregate.Deaccumulate().Compile();
             Diff = aggregate.Difference().Compile();
 
-            Size = (int) (window / period) + 1;
-            States = new Queue<(long t, TState s)>(Size);
+            Counter = BeatCorrection(stream.GetSyncTime());
+            States = new Queue<(long t, TState s)>((int) (window / period) + 1);
             State = (-1, Init());
         }
 
@@ -59,6 +60,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         public override bool GetBV() => true;
+
         /// <summary>
         /// 
         /// </summary>
@@ -103,6 +105,15 @@ namespace Microsoft.StreamProcessing
             } while (t < Counter);
 
             Counter += Period;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override BStreamable<TResult> Clone()
+        {
+            return new AggregateBStream<TPayload, TState, TResult>(Stream, Aggregate, Window, Period, Offset);
         }
     }
 }

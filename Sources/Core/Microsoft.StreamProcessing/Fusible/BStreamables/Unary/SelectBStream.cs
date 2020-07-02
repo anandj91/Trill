@@ -51,5 +51,14 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public override void Next() => Stream.Next();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override BStreamable<TResult> Clone()
+        {
+            return new SelectBStream<TPayload, TResult>(Stream, Selector);
+        }
     }
 }

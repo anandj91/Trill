@@ -57,5 +57,11 @@ namespace Microsoft.StreamProcessing
         /// <param name="t"></param>
         /// <returns></returns>
         public long BeatCorrection(long t);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public BStreamable<TPayload> Clone();
     }
 }

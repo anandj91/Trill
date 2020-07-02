@@ -64,5 +64,11 @@ namespace Microsoft.StreamProcessing
         {
             return t + Period - ((t - Offset) % Period);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract BStreamable<TPayload> Clone();
     }
 }
