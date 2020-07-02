@@ -60,6 +60,7 @@ namespace Microsoft.StreamProcessing
         {
             do
             {
+                if (IsDone()) return;
                 Stream.Next();
             } while (!Stream.GetBV() || Filter(Stream.GetPayload()));
         }

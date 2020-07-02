@@ -12,11 +12,12 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         protected BStreamable<TLeft> Left;
+
         /// <summary>
         /// 
         /// </summary>
         protected BStreamable<TRight> Right;
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -30,16 +31,32 @@ namespace Microsoft.StreamProcessing
             Left = left;
             Right = right;
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override bool GetBV() => true;
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override int GetHash() => 0;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool IsDone() => Left.IsDone() && Right.IsDone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Init()
+        {
+            Left.Init();
+            Right.Init();
+        }
     }
 }

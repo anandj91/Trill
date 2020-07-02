@@ -11,7 +11,6 @@ namespace Microsoft.StreamProcessing
     public class JoinBStream<TLeft, TRight, TResult> : BinaryBStream<TLeft, TRight, TResult>
     {
         private Func<TLeft, TRight, TResult> Joiner;
-        private bool isInit;
 
         /// <summary>
         /// 
@@ -29,7 +28,6 @@ namespace Microsoft.StreamProcessing
             : base(left, right, period, offset)
         {
             Joiner = joiner;
-            isInit = true;
         }
 
         /// <summary>
@@ -55,13 +53,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public override void Next()
         {
-            if (isInit)
-            {
-                Left.Next();
-                Right.Next();
-            }
-
-            while (!Overlap())
+            while (!IsDone() && !Overlap())
             {
                 if (Left.GetSyncTime() < Right.GetSyncTime())
                 {

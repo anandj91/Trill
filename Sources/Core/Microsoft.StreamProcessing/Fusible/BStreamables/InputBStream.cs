@@ -8,6 +8,7 @@ namespace Microsoft.StreamProcessing
     public class InputBStream<TKey, TPayload> : BStream<TPayload>
     {
         private StreamMessage<TKey, TPayload> Batch;
+        private int Start;
         private int Idx;
 
         /// <summary>
@@ -16,12 +17,13 @@ namespace Microsoft.StreamProcessing
         /// <param name="batch"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        /// <param name="idx"></param>
-        public InputBStream(StreamMessage<TKey, TPayload> batch, long period, long offset, int idx = 0)
+        /// <param name="start"></param>
+        public InputBStream(StreamMessage<TKey, TPayload> batch, long period, long offset, int start = 0)
             : base(period, offset)
         {
             Batch = batch;
-            Idx = idx - 1;
+            Start = start;
+            Idx = -1;
         }
 
         /// <summary>
@@ -57,7 +59,13 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public override void Next() => Idx++;
+        public override void Next()
+        {
+            while (!IsDone() && !GetBV())
+            {
+                ++Idx;
+            }
+        }
 
         /// <summary>
         /// 
@@ -66,6 +74,20 @@ namespace Microsoft.StreamProcessing
         public override BStreamable<TPayload> Clone()
         {
             return new InputBStream<TKey, TPayload>(Batch, Period, Offset, Idx);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool IsDone() => Idx < Batch.Count;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Init()
+        {
+            Idx = Start;
         }
     }
 }

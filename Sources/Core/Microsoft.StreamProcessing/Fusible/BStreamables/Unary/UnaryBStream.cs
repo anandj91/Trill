@@ -22,5 +22,16 @@ namespace Microsoft.StreamProcessing
         {
             Stream = stream;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool IsDone() => Stream.IsDone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Init() => Stream.Init();
     }
 }

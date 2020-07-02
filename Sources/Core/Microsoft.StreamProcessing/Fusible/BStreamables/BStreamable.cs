@@ -63,5 +63,17 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         public BStreamable<TPayload> Clone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsDone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public void Init();
     }
 }

@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
 
         private long Counter;
         private IAggregate<TPayload, TState, TResult> Aggregate;
-        private Func<TState> Init;
+        private Func<TState> Initialize;
         private Func<TState, long, TPayload, TState> Acc;
         private Func<TState, TResult> Res;
         private Func<TState, long, TPayload, TState> Deacc;
@@ -44,15 +44,6 @@ namespace Microsoft.StreamProcessing
         {
             Window = window;
             Aggregate = aggregate;
-            Init = aggregate.InitialState().Compile();
-            Acc = aggregate.Accumulate().Compile();
-            Res = aggregate.ComputeResult().Compile();
-            Deacc = aggregate.Deaccumulate().Compile();
-            Diff = aggregate.Difference().Compile();
-
-            Counter = BeatCorrection(stream.GetSyncTime());
-            States = new Queue<(long t, TState s)>((int) (window / period) + 1);
-            State = (-1, Init());
         }
 
         /// <summary>
@@ -93,7 +84,7 @@ namespace Microsoft.StreamProcessing
             long t;
             do
             {
-                Stream.Next();
+                if (IsDone()) return;
                 t = Stream.GetSyncTime();
                 while (States.Count > 0 && States.Peek().t < t - Window)
                 {
@@ -114,6 +105,23 @@ namespace Microsoft.StreamProcessing
         public override BStreamable<TResult> Clone()
         {
             return new AggregateBStream<TPayload, TState, TResult>(Stream, Aggregate, Window, Period, Offset);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Init()
+        {
+            base.Init();
+            Initialize = Aggregate.InitialState().Compile();
+            Acc = Aggregate.Accumulate().Compile();
+            Res = Aggregate.ComputeResult().Compile();
+            Deacc = Aggregate.Deaccumulate().Compile();
+            Diff = Aggregate.Difference().Compile();
+
+            Counter = BeatCorrection(Stream.GetSyncTime());
+            States = new Queue<(long t, TState s)>((int) (Window / Period) + 1);
+            State = (-1, Initialize());
         }
     }
 }

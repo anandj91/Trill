@@ -4,7 +4,7 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
-    public abstract class BStream<TPayload>: BStreamable<TPayload>
+    public abstract class BStream<TPayload> : BStreamable<TPayload>
     {
         /// <summary>
         /// 
@@ -16,10 +16,12 @@ namespace Microsoft.StreamProcessing
             Period = period;
             Offset = offset;
         }
+
         /// <summary>
         /// 
         /// </summary>
         public long Period { get; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -30,26 +32,31 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         public abstract TPayload GetPayload();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public abstract long GetSyncTime();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public abstract long GetOtherTime();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public abstract bool GetBV();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public abstract int GetHash();
+
         /// <summary>
         /// 
         /// </summary>
@@ -70,5 +77,17 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         public abstract BStreamable<TPayload> Clone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool IsDone();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract void Init();
     }
 }
