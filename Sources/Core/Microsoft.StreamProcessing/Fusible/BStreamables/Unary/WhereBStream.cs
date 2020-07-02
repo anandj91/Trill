@@ -28,30 +28,41 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         public override TPayload GetPayload() => Stream.GetPayload();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override long GetSyncTime() => Stream.GetSyncTime();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override long GetOtherTime() => Stream.GetOtherTime();
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool GetBV() => Stream.GetBV() || !Filter(Stream.GetPayload());
+        public override bool GetBV() => true;
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override int GetHash() => Stream.GetHash();
+
         /// <summary>
         /// 
         /// </summary>
-        public override void Next() => Stream.Next();
+        public override void Next()
+        {
+            do
+            {
+                Stream.Next();
+            } while (!Stream.GetBV() || Filter(Stream.GetPayload()));
+        }
 
         /// <summary>
         /// 
