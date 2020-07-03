@@ -4,7 +4,8 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
-    public abstract class BStream<TPayload> : BStreamable<TPayload>
+    /// <typeparam name="TState"></typeparam>
+    public abstract class BStream<TState, TPayload> : BStreamable<TState, TPayload>
     {
         /// <summary>
         /// 
@@ -30,37 +31,44 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract TPayload GetPayload();
+        public abstract TPayload GetPayload(TState state);
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract long GetSyncTime();
+        public abstract long GetSyncTime(TState state);
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract long GetOtherTime();
+        public abstract long GetOtherTime(TState state);
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract bool GetBV();
+        public abstract bool GetBV(TState state);
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract int GetHash();
+        public abstract int GetHash(TState state);
 
         /// <summary>
         /// 
         /// </summary>
-        public abstract void Next();
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public abstract TState Next(TState state);
 
         /// <summary>
         /// 
@@ -75,19 +83,14 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public abstract BStreamable<TPayload> Clone();
+        public abstract bool IsDone(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public abstract bool IsDone();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public abstract void Init();
+        public abstract TState Init();
     }
 }

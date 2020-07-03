@@ -6,7 +6,8 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
-    public class WhereBStream<TPayload> : UnaryBStream<TPayload, TPayload>
+    /// <typeparam name="TState"></typeparam>
+    public class WhereBStream<TState, TPayload> : OneToOneBStream<TState, TPayload, TPayload>
     {
         private Func<TPayload, bool> Filter;
 
@@ -17,7 +18,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="filter"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public WhereBStream(BStreamable<TPayload> stream, Func<TPayload, bool> filter, long period, long offset)
+        public WhereBStream(BStreamable<TState, TPayload> stream, Func<TPayload, bool> filter, long period, long offset)
             : base(stream, period, offset)
         {
             Filter = filter;
@@ -26,52 +27,22 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override TPayload GetPayload() => Stream.GetPayload();
+        public override TPayload GetPayload(TState state) => Stream.GetPayload(state);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public override long GetSyncTime() => Stream.GetSyncTime();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override long GetOtherTime() => Stream.GetOtherTime();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override bool GetBV() => true;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHash() => Stream.GetHash();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override void Next()
+        public override TState Next(TState state)
         {
             do
             {
-                if (IsDone()) return;
-                Stream.Next();
-            } while (!Stream.GetBV() || Filter(Stream.GetPayload()));
-        }
+                if (IsDone(state)) return state;
+                state = Stream.Next(state);
+            } while (!Stream.GetBV(state) || Filter(Stream.GetPayload(state)));
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override BStreamable<TPayload> Clone()
-        {
-            return new WhereBStream<TPayload>(Stream, Filter, Period, Offset);
+            return state;
         }
     }
 }

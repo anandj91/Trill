@@ -5,18 +5,19 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    public class SelectBStream<TPayload, TResult> : UnaryBStream<TPayload, TResult>
+    /// <typeparam name="TInput"></typeparam>
+    /// <typeparam name="TOutput"></typeparam>
+    /// <typeparam name="TState"></typeparam>
+    public class SelectBStream<TState, TInput, TOutput> : OneToOneBStream<TState, TInput, TOutput>
     {
-        private Func<TPayload, TResult> Selector;
+        private Func<TInput, TOutput> Selector;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="selector"></param>
-        public SelectBStream(BStreamable<TPayload> stream, Func<TPayload, TResult> selector)
+        public SelectBStream(BStreamable<TState, TInput> stream, Func<TInput, TOutput> selector)
             : base(stream, stream.Period, stream.Offset)
         {
             Selector = selector;
@@ -25,40 +26,8 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override TResult GetPayload() => Selector(Stream.GetPayload());
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override long GetSyncTime() => Stream.GetSyncTime();
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override long GetOtherTime() => Stream.GetOtherTime();
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override bool GetBV() => Stream.GetBV();
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHash() => Stream.GetHash();
-        /// <summary>
-        /// 
-        /// </summary>
-        public override void Next() => Stream.Next();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override BStreamable<TResult> Clone()
-        {
-            return new SelectBStream<TPayload, TResult>(Stream, Selector);
-        }
+        public override TOutput GetPayload(TState state) => Selector(Stream.GetPayload(state));
     }
 }

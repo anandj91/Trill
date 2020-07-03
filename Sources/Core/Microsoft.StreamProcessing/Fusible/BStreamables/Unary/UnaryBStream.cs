@@ -3,14 +3,17 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    public abstract class UnaryBStream<TPayload, TResult> : BStream<TResult>
+    /// <typeparam name="TInput"></typeparam>
+    /// <typeparam name="TOutput"></typeparam>
+    /// <typeparam name="TIState"></typeparam>
+    /// <typeparam name="TOState"></typeparam>
+    public abstract class UnaryBStream<TIState, TInput, TOState, TOutput>
+        : BStream<TOState, TOutput>
     {
         /// <summary>
         /// 
         /// </summary>
-        protected BStreamable<TPayload> Stream;
+        protected BStreamable<TIState, TInput> Stream;
 
         /// <summary>
         /// 
@@ -18,20 +21,9 @@ namespace Microsoft.StreamProcessing
         /// <param name="stream"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public UnaryBStream(BStreamable<TPayload> stream, long period, long offset) : base(period, offset)
+        public UnaryBStream(BStreamable<TIState, TInput> stream, long period, long offset) : base(period, offset)
         {
             Stream = stream;
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override bool IsDone() => Stream.IsDone();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override void Init() => Stream.Init();
     }
 }

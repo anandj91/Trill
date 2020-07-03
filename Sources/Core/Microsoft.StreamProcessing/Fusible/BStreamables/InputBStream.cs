@@ -5,89 +5,89 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
-    public class InputBStream<TKey, TPayload> : BStream<TPayload>
+    public class InputBStream<TKey, TPayload> : BStream<int, TPayload>
     {
-        private StreamMessage<TKey, TPayload> Batch;
+        /// <summary>
+        /// 
+        /// </summary>
+        public StreamMessage<TKey, TPayload> Batch { get; set; }
         private int Start;
-        private int Idx;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="batch"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
         /// <param name="start"></param>
-        public InputBStream(StreamMessage<TKey, TPayload> batch, long period, long offset, int start = 0)
+        public InputBStream(long period, long offset, int start = 0)
             : base(period, offset)
         {
-            Batch = batch;
             Start = start;
-            Idx = -1;
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override TPayload GetPayload() => Batch.payload.col[Idx];
+        public override TPayload GetPayload(int state) => Batch.payload.col[state];
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override long GetSyncTime() => Batch.vsync.col[Idx];
+        public override long GetSyncTime(int state) => Batch.vsync.col[state];
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override long GetOtherTime() => Batch.vother.col[Idx];
+        public override long GetOtherTime(int state) => Batch.vother.col[state];
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override bool GetBV() => ((Batch.bitvector.col[Idx >> 6] & (1L << (Idx & 0x3f))) == 0);
+        public override bool GetBV(int state) => ((Batch.bitvector.col[state >> 6] & (1L << (state & 0x3f))) == 0);
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override int GetHash() => Batch.hash.col[Idx];
+        public override int GetHash(int state) => Batch.hash.col[state];
 
         /// <summary>
         /// 
         /// </summary>
-        public override void Next()
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public override int Next(int state)
         {
-            while (!IsDone() && !GetBV())
+            while (!IsDone(state) && !GetBV(state))
             {
-                ++Idx;
+                ++state;
             }
+
+            return state;
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override BStreamable<TPayload> Clone()
-        {
-            return new InputBStream<TKey, TPayload>(Batch, Period, Offset, Idx);
-        }
+        public override bool IsDone(int state) => state < Batch.Count;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public override bool IsDone() => Idx < Batch.Count;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override void Init()
+        public override int Init()
         {
-            Idx = Start;
+            return Start;
         }
     }
 }

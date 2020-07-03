@@ -6,17 +6,21 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TLeft"></typeparam>
     /// <typeparam name="TRight"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    public abstract class BinaryBStream<TLeft, TRight, TResult> : BStream<TResult>
+    /// <typeparam name="TLState"></typeparam>
+    /// <typeparam name="TRState"></typeparam>
+    /// <typeparam name="TState"></typeparam>
+    public abstract class BinaryBStream<TLState, TLeft, TRState, TRight, TState, TResult>
+        : BStream<(TLState l, TRState r, TState o), TResult>
     {
         /// <summary>
         /// 
         /// </summary>
-        protected BStreamable<TLeft> Left;
+        protected BStreamable<TLState, TLeft> Left;
 
         /// <summary>
         /// 
         /// </summary>
-        protected BStreamable<TRight> Right;
+        protected BStreamable<TRState, TRight> Right;
 
         /// <summary>
         /// 
@@ -25,7 +29,9 @@ namespace Microsoft.StreamProcessing
         /// <param name="right"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public BinaryBStream(BStreamable<TLeft> left, BStreamable<TRight> right, long period, long offset)
+        public BinaryBStream(BStreamable<TLState, TLeft> left, BStreamable<TRState, TRight> right,
+            long period, long offset
+        )
             : base(period, offset)
         {
             Left = left;
@@ -36,27 +42,19 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool GetBV() => true;
+        public override bool GetBV((TLState l, TRState r, TState o) state) => true;
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override int GetHash() => 0;
+        public override int GetHash((TLState l, TRState r, TState o) state) => 0;
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool IsDone() => Left.IsDone() && Right.IsDone();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override void Init()
-        {
-            Left.Init();
-            Right.Init();
-        }
+        public override bool IsDone((TLState l, TRState r, TState o) state)
+            => Left.IsDone(state.l) && Right.IsDone(state.r);
     }
 }

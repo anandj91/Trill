@@ -4,7 +4,8 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
-    public interface BStreamable<TPayload>
+    /// <typeparam name="TState"></typeparam>
+    public interface BStreamable<TState, TPayload>
     {
         /// <summary>
         /// 
@@ -20,36 +21,36 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public TPayload GetPayload();
+        public TPayload GetPayload(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public long GetSyncTime();
+        public long GetSyncTime(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public long GetOtherTime();
+        public long GetOtherTime(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool GetBV();
+        public bool GetBV(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public int GetHash();
+        public int GetHash(TState state);
 
         /// <summary>
         /// 
         /// </summary>
-        public void Next();
+        public TState Next(TState state);
 
         /// <summary>
         /// 
@@ -62,18 +63,12 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public BStreamable<TPayload> Clone();
+        public bool IsDone(TState state);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool IsDone();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public void Init();
+        public TState Init();
     }
 }
