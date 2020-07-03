@@ -1,22 +1,29 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.StreamProcessing
 {
-    internal sealed class FuseStreamable<TKey, TPayload, TResult> : UnaryStreamable<TKey, TPayload, TResult>
+    internal sealed class FuseStreamable<TPayload, TState, TResult> : UnaryStreamable<Empty, TPayload, TResult>
     {
-        public BStreamable<TResult> BStream;
+        public Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> Transform;
+        public long Period;
+        public long Offset;
 
-        public FuseStreamable(IStreamable<TKey, TPayload> source, BStreamable<TResult> bstream)
-            : base(source, source.Properties.Fuse(bstream))
+        public FuseStreamable(IStreamable<Empty, TPayload> source,
+            Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> transform,
+            long period, long offset)
+            : base(source, source.Properties.Fuse(transform, period, offset))
         {
             Contract.Requires(source != null);
-            BStream = bstream;
+            Transform = transform;
+            Period = period;
+            Offset = offset;
             Initialize();
         }
 
-        internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TResult> observer)
+        internal override IStreamObserver<Empty, TPayload> CreatePipe(IStreamObserver<Empty, TResult> observer)
         {
-            return new FusePipe<TKey, TPayload, TResult>(this, observer);
+            return new FusePipe<TPayload, TState, TResult>(this, observer);
         }
 
         protected override bool CanGenerateColumnar()

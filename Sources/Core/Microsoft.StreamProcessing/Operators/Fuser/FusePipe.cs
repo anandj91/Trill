@@ -6,59 +6,72 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
-    internal sealed class FusePipe<TKey, TPayload, TResult> : UnaryPipe<TKey, TPayload, TResult>
+    internal sealed class FusePipe<TPayload, TState, TResult> : UnaryPipe<Empty, TPayload, TResult>
     {
-        [SchemaSerialization] private BStreamable<TResult> BStream;
-        private readonly MemoryPool<TKey, TResult> pool;
-        private readonly string errorMessages;
+        [SchemaSerialization] private Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> Transform;
+        private readonly MemoryPool<Empty, TResult> pool;
+        private InputBStream<Empty, TPayload> input;
+
+        [DataMember] private StreamMessage<Empty, TResult> output;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public FusePipe()
         {
         }
 
-        public FusePipe(FuseStreamable<TKey, TPayload, TResult> stream, IStreamObserver<TKey, TResult> observer)
+        public FusePipe(FuseStreamable<TPayload, TState, TResult> stream, IStreamObserver<Empty, TResult> observer)
             : base(stream, observer)
         {
-            BStream = stream.BStream;
-            this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
-            this.errorMessages = stream.ErrorMessages;
+            Transform = stream.Transform;
+            this.pool = MemoryManager.GetMemoryPool<Empty, TResult>(stream.Properties.IsColumnar);
+            this.pool.Get(out this.output);
+            this.output.Allocate();
+            input = new InputBStream<Empty, TPayload>(stream.Period, stream.Offset);
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(
-                new FusePlanNode(previous, this, typeof(TKey), typeof(TPayload), typeof(TResult))
+                new FusePlanNode(previous, this, typeof(Empty), typeof(TPayload), typeof(TResult))
             );
 
-        public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
+        public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
-            this.pool.Get(out StreamMessage<TKey, TResult> outputBatch);
-
-            var count = batch.Count;
-            outputBatch.vsync = batch.vsync;
-            outputBatch.vother = batch.vother;
-            outputBatch.key = batch.key;
-            outputBatch.hash = batch.hash;
-            outputBatch.iter = batch.iter;
-            this.pool.GetPayload(out outputBatch.payload);
-            outputBatch.bitvector = batch.bitvector;
-
-            var dest = outputBatch.payload.col;
-            var src = batch.payload.col;
-            fixed (long* bv = batch.bitvector.col)
+            input.Batch = batch;
+            var bstream = Transform(input);
+            var state = bstream.Init();
+            while (!bstream.IsDone(state))
             {
-                for (int i = 0; i < count; i++)
-                {
-                    if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
-                    {
-                    }
-                }
+                AddToBatch(
+                    bstream.GetSyncTime(state), bstream.GetOtherTime(state), default,
+                    bstream.GetPayload(state), bstream.GetHash(state));
+                state = bstream.Next(state);
             }
 
-            outputBatch.Count = count;
             batch.payload.Return();
             batch.Return();
-            this.Observer.OnNext(outputBatch);
+            FlushContents();
+        }
+
+        private void AddToBatch(long start, long end, Empty key, TResult payload, int hash)
+        {
+            int index = this.output.Count++;
+            this.output.vsync.col[index] = start;
+            this.output.vother.col[index] = end;
+            this.output.key.col[index] = key;
+            this.output.payload.col[index] = payload;
+            this.output.hash.col[index] = hash;
+            if (end == StreamEvent.PunctuationOtherTime)
+                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+
+            if (this.output.Count == Config.DataBatchSize) FlushContents();
+        }
+
+        protected override void FlushContents()
+        {
+            if (this.output.Count == 0) return;
+            this.Observer.OnNext(this.output);
+            this.pool.Get(out this.output);
+            this.output.Allocate();
         }
 
         public override int CurrentlyBufferedOutputCount => 0;

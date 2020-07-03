@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
         public long? ConstantDurationLength;
 
         /// <summary>
-        /// Indicates whether the stream consists only of start edges.
+        /// Indicates whether the stream consists only of stastream consists only of startrt edges.
         /// </summary>
         public bool IsStartEdgeOnly => this.IsConstantDuration && this.ConstantDurationLength == StreamEvent.InfinitySyncTime;
 
@@ -550,8 +550,12 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal StreamProperties<TKey, TPayload> Where(Expression<Func<TPayload, bool>> predicate) => this;
 
-        internal StreamProperties<TKey, TResult> Fuse<TResult>(BStreamable<TResult> bstream)
+        internal StreamProperties<TKey, TResult> Fuse<TState, TResult>(
+            Func<InputBStream<TKey, TPayload>, BStreamable<TState, TResult>> Transform,
+            long period, long offset
+        )
         {
+            var bstream = Transform(new InputBStream<TKey, TPayload>(period, offset));
             return new StreamProperties<TKey, TResult>(
                 false, true, bstream.Period, true, bstream.Period, bstream.Offset, false, true, true, true,
                 this.KeyEqualityComparer, EqualityComparerExpression<TResult>.Default,
