@@ -1179,6 +1179,23 @@ namespace Microsoft.StreamProcessing
             return source.GroupApply(selector, apply => apply.Aggregate(w => w.Count()), (g, c) => g.Key);
         }
 
+        /// <summary>
+        /// Fuse operation.
+        /// </summary>
+        /// <param name="source">Source streamable for the operation.</param>
+        /// <param name="transform"></param>
+        /// <param name="period"></param>
+        /// <param name="offset"></param>
+        public static IStreamable<Empty, TResult> Fuse<TPayload, TState, TResult>(
+            this IStreamable<Empty, TPayload> source,
+            Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> transform,
+            long period, long offset)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+
+            return new FuseStreamable<TPayload, TState, TResult>(source, transform, period, offset);
+        }
+
         /** following are internal for now **/
 
         internal static IStreamable<TKey, ulong> ScaledOutCount<TKey, TPayload>(this IStreamable<TKey, TPayload> source)

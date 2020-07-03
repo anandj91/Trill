@@ -11,6 +11,7 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization] private Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> Transform;
         private readonly MemoryPool<Empty, TResult> pool;
         private InputBStream<Empty, TPayload> input;
+        private BStreamable<TState, TResult> outStream;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -27,6 +28,7 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
             input = new InputBStream<Empty, TPayload>(stream.Period, stream.Offset);
+            outStream = Transform(input);
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -37,14 +39,14 @@ namespace Microsoft.StreamProcessing
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             input.Batch = batch;
-            var bstream = Transform(input);
-            var state = bstream.Init();
-            while (!bstream.IsDone(state))
+
+            var state = outStream.Init();
+            while (!outStream.IsDone(state))
             {
                 AddToBatch(
-                    bstream.GetSyncTime(state), bstream.GetOtherTime(state), default,
-                    bstream.GetPayload(state), bstream.GetHash(state));
-                state = bstream.Next(state);
+                    outStream.GetSyncTime(state), outStream.GetOtherTime(state), default,
+                    outStream.GetPayload(state), outStream.GetHash(state));
+                state = outStream.Next(state);
             }
 
             batch.payload.Return();
