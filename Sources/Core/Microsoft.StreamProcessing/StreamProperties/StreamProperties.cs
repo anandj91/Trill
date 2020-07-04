@@ -550,8 +550,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal StreamProperties<TKey, TPayload> Where(Expression<Func<TPayload, bool>> predicate) => this;
 
-        internal StreamProperties<TKey, TResult> Fuse<TState, TResult>(
-            Func<InputBStream<TKey, TPayload>, BStreamable<TState, TResult>> Transform,
+        internal StreamProperties<TKey, TResult> Fuse<TResult>(
+            Func<InputBStream<TKey, TPayload>, BStreamable<TResult>> Transform,
             long period, long offset
         )
         {

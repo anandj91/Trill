@@ -14,26 +14,31 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="source"></param>
         /// <param name="selector"></param>
-        /// <typeparam name="TState"></typeparam>
         /// <typeparam name="TPayload"></typeparam>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>
-        public static BStreamable<TState, TResult> Select<TState, TPayload, TResult>(
-            this BStreamable<TState, TPayload> source,
-            Expression<Func<TPayload, TResult>> selector)
+        public static BStreamable<TResult> Select<TPayload, TResult>(
+            this BStreamable<TPayload> source,
+            Expression<Func<TPayload, TResult>> selector
+        )
         {
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(selector, nameof(selector));
 
-            return new SelectBStream<TState, TPayload, TResult>(source, selector.Compile());
+            return new SelectBStream<TPayload, TResult>(source, selector.Compile());
         }
 
         /// <summary>
-        /// Performs multicast over a streamable. This allows query writers to execute multiple subqueries over the same physical input stream.
+        /// 
         /// </summary>
-        public static BStreamable<TOState, TResult> Multicast<TIState, TPayload, TOState, TResult>(
-            this BStreamable<TIState, TPayload> source,
-            Func<BStreamable<TIState, TPayload>, BStreamable<TOState, TResult>> selector
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static BStreamable<TResult> Multicast<TPayload, TResult>(
+            this BStreamable<TPayload> source,
+            Func<BStreamable<TPayload>, BStreamable<TResult>> selector
         )
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -43,41 +48,52 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Applies an aggregate to snapshot windows on the input stream.
+        /// 
         /// </summary>
-        public static BStreamable<(TIState i, long t, AggregateState<TAggState> o), TResult> Aggregate
-            <TIState, TPayload, TAggState, TResult>(
-                this BStreamable<TIState, TPayload> source,
-                Func<Window<Empty, TPayload>, IAggregate<TPayload, TAggState, TResult>> aggregate,
-                long window, long period, long offset = 0)
+        /// <param name="source"></param>
+        /// <param name="aggregate"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TAggState"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static BStreamable<TResult> Aggregate<TPayload, TAggState, TResult>(
+            this TumblingWindowBStream<TPayload> source,
+            Func<Window<Empty, TPayload>, IAggregate<TPayload, TAggState, TResult>> aggregate
+        )
         {
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(aggregate, nameof(aggregate));
-            var p = new StreamProperties<Empty, TPayload>(false, true, source.Period, true, source.Period,
-                source.Offset,
+            var p = new StreamProperties<Empty, TPayload>(
+                false, true, source.Period, true, source.Period, source.Offset,
                 false, true, true, true,
                 EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<TPayload>.Default,
-                ComparerExpression<Empty>.Default, ComparerExpression<TPayload>.Default, null, null, null);
-            return new AggregateBStream<TIState, TPayload, TAggState, TResult>(
-                source, aggregate(new Window<Empty, TPayload>(p)), window, period, offset
+                ComparerExpression<Empty>.Default, ComparerExpression<TPayload>.Default, null, null, null
+            );
+            return new AggregateBStream<TPayload, TAggState, TResult>(
+                source, aggregate(new Window<Empty, TPayload>(p))
             );
         }
 
         /// <summary>
-        /// Performs a cross-product between 2 streams
+        /// 
         /// </summary>
-        public static BStreamable<(TLState l, TRState r, Empty o), TResult> Join
-            <TLState, TLeft, TRState, TRight, TResult>(
-                this BStreamable<TLState, TLeft> left,
-                BStreamable<TRState, TRight> right,
-                Func<TLeft, TRight, TResult> resultSelector)
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="resultSelector"></param>
+        /// <typeparam name="TLeft"></typeparam>
+        /// <typeparam name="TRight"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static BStreamable<TResult> Join<TLeft, TRight, TResult>(
+            this BStreamable<TLeft> left,
+            BStreamable<TRight> right,
+            Func<TLeft, TRight, TResult> resultSelector
+        )
         {
             Invariant.IsNotNull(left, nameof(left));
             Invariant.IsNotNull(right, nameof(right));
 
-            return new JoinBStream<TLState, TLeft, TRState, TRight, TResult>(
-                left, right, resultSelector, left.Period, left.Offset
-            );
+            return new JoinBStream<TLeft, TRight, TResult>(left, right, resultSelector);
         }
     }
 }

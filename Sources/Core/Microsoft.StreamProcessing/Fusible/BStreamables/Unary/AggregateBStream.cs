@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing
@@ -8,21 +7,20 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TAggState"></typeparam>
-    public class AggregateState<TAggState>
+    public class AggregateState<TAggState> : UnaryBState
     {
-        internal (long t, TAggState s) TopState;
-        internal Queue<(long t, TAggState s)> States;
+        internal long syncTime;
+        internal TAggState curState;
+        internal TAggState prevState;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="Window"></param>
-        /// <param name="Period"></param>
-        /// <param name="state"></param>
-        public AggregateState(long Window, long Period, TAggState state)
+        public AggregateState(BState i, long time, TAggState state) : base(i)
         {
-            States = new Queue<(long t, TAggState s)>((int) (Window / Period) + 1);
-            TopState = (-1, state);
+            this.curState = state;
+            this.prevState = state;
+            this.syncTime = time;
         }
     }
 
@@ -32,16 +30,9 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TAggState"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    /// <typeparam name="TIState"></typeparam>
-    public class AggregateBStream<TIState, TPayload, TAggState, TResult>
-        : ManyToOneBStream<TIState, TPayload, AggregateState<TAggState>, TResult>
+    public class AggregateBStream<TPayload, TAggState, TResult>
+        : UnaryBStream<TPayload, AggregateState<TAggState>, TResult>
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        protected long Window;
-
-        private long Counter;
         private IAggregate<TPayload, TAggState, TResult> Aggregate;
         private Func<TAggState> Initialize;
         private Func<TAggState, long, TPayload, TAggState> Acc;
@@ -54,66 +45,65 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="aggregate"></param>
-        /// <param name="window"></param>
-        /// <param name="period"></param>
-        /// <param name="offset"></param>
         public AggregateBStream(
-            BStreamable<TIState, TPayload> stream,
-            IAggregate<TPayload, TAggState, TResult> aggregate,
-            long window, long period, long offset
-        ) : base(stream, period, offset)
+            TumblingWindowBStream<TPayload> stream,
+            IAggregate<TPayload, TAggState, TResult> aggregate
+        ) : base(stream, stream.Period, stream.Offset)
         {
-            Window = window;
             Aggregate = aggregate;
+            Initialize = Aggregate.InitialState().Compile();
+            Acc = Aggregate.Accumulate().Compile();
+            Res = Aggregate.ComputeResult().Compile();
+            Deacc = Aggregate.Deaccumulate().Compile();
+            Diff = Aggregate.Difference().Compile();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override TResult GetPayload((TIState i, long t, AggregateState<TAggState> o) state)
-            => Res(Diff(state.o.TopState.s, state.o.States.Peek().s));
+        protected override AggregateState<TAggState> _Init()
+            => new AggregateState<TAggState>(Stream.Init(), -1, Initialize());
 
         /// <summary>
         /// 
         /// </summary>
-        public override (TIState i, long t, AggregateState<TAggState> o) Next(
-            (TIState i, long t, AggregateState<TAggState> o) state
-        )
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override TResult _GetPayload(AggregateState<TAggState> state) => Res(state.prevState);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        protected override TResult Selector(TPayload payload)
         {
-            long t;
-            do
-            {
-                if (IsDone(state)) return state;
-                t = Stream.GetSyncTime(state.i);
-                while (state.o.States.Count > 0 && state.o.States.Peek().t < t - Window)
-                {
-                    state.o.States.Dequeue();
-                }
-
-                var newState = (t, Acc(state.o.TopState.s, t, Stream.GetPayload(state.i)));
-                state.o.States.Enqueue(newState);
-                state.o.TopState = newState;
-            } while (t < Counter);
-
-            Counter += Period;
-            return state;
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public override (TIState i, long t, AggregateState<TAggState> o) Init()
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool ProcessNextItem(AggregateState<TAggState> state)
         {
-            var i = Stream.Init();
-            Initialize = Aggregate.InitialState().Compile();
-            Acc = Aggregate.Accumulate().Compile();
-            Res = Aggregate.ComputeResult().Compile();
-            Deacc = Aggregate.Deaccumulate().Compile();
-            Diff = Aggregate.Difference().Compile();
+            bool res = false;
+            var item = Stream.GetPayload(state.i);
+            var sync = Stream.GetSyncTime(state.i);
 
-            Counter = BeatCorrection(Stream.GetSyncTime(i));
-            return (i, Counter, new AggregateState<TAggState>(Window, Period, Initialize()));
+            if (state.syncTime < sync)
+            {
+                state.syncTime = BeatCorrection(sync);
+                state.prevState = state.curState;
+                state.curState = Initialize();
+                res = true;
+            }
+
+            state.curState = Acc(state.curState, sync, item);
+            return res;
         }
     }
 }

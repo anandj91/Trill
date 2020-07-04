@@ -5,29 +5,38 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TInput"></typeparam>
-    /// <typeparam name="TOutput"></typeparam>
-    /// <typeparam name="TState"></typeparam>
-    public class SelectBStream<TState, TInput, TOutput> : OneToOneBStream<TState, TInput, TOutput>
+    public class SelectBStream<TInput, TOutput> : UnaryBStream<TInput, UnaryBState, TOutput>
     {
-        private Func<TInput, TOutput> Selector;
+        private Func<TInput, TOutput> Select;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="selector"></param>
-        public SelectBStream(BStreamable<TState, TInput> stream, Func<TInput, TOutput> selector)
+        public SelectBStream(BStreamable<TInput> stream, Func<TInput, TOutput> select)
             : base(stream, stream.Period, stream.Offset)
         {
-            Selector = selector;
+            Select = select;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="state"></param>
         /// <returns></returns>
-        public override TOutput GetPayload(TState state) => Selector(Stream.GetPayload(state));
+        protected override TOutput Selector(TInput payload)
+        {
+            return Select(payload);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool ProcessNextItem(UnaryBState state) => true;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override UnaryBState _Init() => new UnaryBState(Stream.Init());
     }
 }

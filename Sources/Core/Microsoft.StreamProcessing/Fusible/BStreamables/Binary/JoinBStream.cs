@@ -8,10 +8,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TLeft"></typeparam>
     /// <typeparam name="TRight"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    /// <typeparam name="TLState"></typeparam>
-    /// <typeparam name="TRState"></typeparam>
-    public class JoinBStream<TLState, TLeft, TRState, TRight, TResult>
-        : BinaryBStream<TLState, TLeft, TRState, TRight, Empty, TResult>
+    public class JoinBStream<TLeft, TRight, TResult> : BinaryBStream<TLeft, TRight, BinaryBState, TResult>
     {
         private Func<TLeft, TRight, TResult> Joiner;
 
@@ -21,14 +18,8 @@ namespace Microsoft.StreamProcessing
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <param name="joiner"></param>
-        /// <param name="period"></param>
-        /// <param name="offset"></param>
-        public JoinBStream(
-            BStreamable<TLState, TLeft> left,
-            BStreamable<TRState, TRight> right,
-            Func<TLeft, TRight, TResult> joiner,
-            long period, long offset)
-            : base(left, right, period, offset)
+        public JoinBStream(BStreamable<TLeft> left, BStreamable<TRight> right, Func<TLeft, TRight, TResult> joiner)
+            : base(left, right, left.Period, left.Offset)
         {
             Joiner = joiner;
         }
@@ -37,55 +28,51 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public override TResult GetPayload((TLState l, TRState r, Empty o) state)
-            => Joiner(Left.GetPayload(state.l), Right.GetPayload(state.r));
+        protected override TResult _GetPayload(BinaryBState state)
+            => Joiner(Left.GetPayload(state.left), Right.GetPayload(state.right));
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override long GetSyncTime((TLState l, TRState r, Empty o) state)
-            => Math.Max(Left.GetSyncTime(state.l), Right.GetSyncTime(state.r));
+        protected override long _GetSyncTime(BinaryBState state)
+            => Math.Max(Left.GetSyncTime(state.left), Right.GetSyncTime(state.right));
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override long GetOtherTime((TLState l, TRState r, Empty o) state)
-            => Math.Min(Left.GetOtherTime(state.l), Right.GetOtherTime(state.r));
+        protected override long _GetOtherTime(BinaryBState state)
+            => Math.Min(Left.GetOtherTime(state.left), Right.GetOtherTime(state.right));
 
         /// <summary>
         /// 
         /// </summary>
-        public override (TLState l, TRState r, Empty o) Next(
-            (TLState l, TRState r, Empty o) state
-        )
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool ProcessNextItem(BinaryBState state)
         {
-            while (!IsDone(state) && !Overlap(state))
-            {
-                if (Left.GetSyncTime(state.l) < Right.GetSyncTime(state.r))
-                {
-                    state.l = Left.Next(state.l);
-                }
-                else
-                {
-                    state.r = Right.Next(state.r);
-                }
-            }
-
-            return state;
+            return Overlap(state);
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
         /// <returns></returns>
-        public override (TLState l, TRState r, Empty o) Init() => (Left.Init(), Right.Init(), default);
+        protected override bool _IsDone(BinaryBState state) => Left.IsDone(state.left) || Right.IsDone(state.right);
 
-        private bool Overlap((TLState l, TRState r, Empty o) state)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override BinaryBState _Init() => new BinaryBState(Left.Init(), Right.Init());
+
+        private bool Overlap(BinaryBState state)
         {
-            return (Math.Max(Left.GetSyncTime(state.l), Right.GetSyncTime(state.r)) <
-                    Math.Min(Left.GetOtherTime(state.l), Right.GetOtherTime(state.r)));
+            return state.left.Ready && state.right.Ready &&
+                   (Math.Max(Left.GetSyncTime(state.left), Right.GetSyncTime(state.right)) <
+                    Math.Min(Left.GetOtherTime(state.left), Right.GetOtherTime(state.right)));
         }
     }
 }

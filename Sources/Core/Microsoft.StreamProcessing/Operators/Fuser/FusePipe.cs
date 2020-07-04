@@ -6,12 +6,14 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
-    internal sealed class FusePipe<TPayload, TState, TResult> : UnaryPipe<Empty, TPayload, TResult>
+    internal sealed class FusePipe<TPayload, TResult> : UnaryPipe<Empty, TPayload, TResult>
     {
-        [SchemaSerialization] private Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> Transform;
+        [SchemaSerialization] private Func<InputBStream<Empty, TPayload>, BStreamable<TResult>> Transform;
         private readonly MemoryPool<Empty, TResult> pool;
         private InputBStream<Empty, TPayload> input;
-        private BStreamable<TState, TResult> outStream;
+        private BStreamable<TResult> outStream;
+        private BState State;
+        private bool isInit;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -20,7 +22,7 @@ namespace Microsoft.StreamProcessing
         {
         }
 
-        public FusePipe(FuseStreamable<TPayload, TState, TResult> stream, IStreamObserver<Empty, TResult> observer)
+        public FusePipe(FuseStreamable<TPayload, TResult> stream, IStreamObserver<Empty, TResult> observer)
             : base(stream, observer)
         {
             Transform = stream.Transform;
@@ -29,6 +31,7 @@ namespace Microsoft.StreamProcessing
             this.output.Allocate();
             input = new InputBStream<Empty, TPayload>(stream.Period, stream.Offset);
             outStream = Transform(input);
+            isInit = true;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -38,15 +41,23 @@ namespace Microsoft.StreamProcessing
 
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
-            input.Batch = batch;
-
-            var state = outStream.Init();
-            while (!outStream.IsDone(state))
+            input.SetBatch(batch);
+            if (isInit)
             {
-                AddToBatch(
-                    outStream.GetSyncTime(state), outStream.GetOtherTime(state), default,
-                    outStream.GetPayload(state), outStream.GetHash(state));
-                state = outStream.Next(state);
+                State = outStream.Init();
+                isInit = false;
+            }
+
+            while (!outStream.IsDone(State))
+            {
+                if (State.Ready)
+                {
+                    AddToBatch(
+                        outStream.GetSyncTime(State), outStream.GetOtherTime(State), default,
+                        outStream.GetPayload(State), outStream.GetHash(State));
+                }
+
+                State = outStream.Next(State);
             }
 
             batch.payload.Return();

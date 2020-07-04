@@ -1186,14 +1186,14 @@ namespace Microsoft.StreamProcessing
         /// <param name="transform"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public static IStreamable<Empty, TResult> Fuse<TPayload, TState, TResult>(
+        public static IStreamable<Empty, TResult> Fuse<TPayload, TResult>(
             this IStreamable<Empty, TPayload> source,
-            Func<InputBStream<Empty, TPayload>, BStreamable<TState, TResult>> transform,
+            Func<InputBStream<Empty, TPayload>, BStreamable<TResult>> transform,
             long period, long offset)
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            return new FuseStreamable<TPayload, TState, TResult>(source, transform, period, offset);
+            return new FuseStreamable<TPayload, TResult>(source, transform, period, offset);
         }
 
         /** following are internal for now **/

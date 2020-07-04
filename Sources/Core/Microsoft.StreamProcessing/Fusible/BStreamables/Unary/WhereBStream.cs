@@ -5,21 +5,15 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
-    /// <typeparam name="TState"></typeparam>
-    public class WhereBStream<TState, TPayload> : OneToOneBStream<TState, TPayload, TPayload>
+    public class WhereBStream<TPayload> : UnaryBStream<TPayload, UnaryBState, TPayload>
     {
         private Func<TPayload, bool> Filter;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="filter"></param>
-        /// <param name="period"></param>
-        /// <param name="offset"></param>
-        public WhereBStream(BStreamable<TState, TPayload> stream, Func<TPayload, bool> filter, long period, long offset)
-            : base(stream, period, offset)
+        public WhereBStream(BStreamable<TPayload> stream, Func<TPayload, bool> filter)
+            : base(stream, stream.Period, stream.Offset)
         {
             Filter = filter;
         }
@@ -27,22 +21,22 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="state"></param>
         /// <returns></returns>
-        public override TPayload GetPayload(TState state) => Stream.GetPayload(state);
+        protected override TPayload Selector(TPayload payload) => payload;
 
         /// <summary>
         /// 
         /// </summary>
-        public override TState Next(TState state)
+        /// <returns></returns>
+        protected override bool ProcessNextItem(UnaryBState state)
         {
-            do
-            {
-                if (IsDone(state)) return state;
-                state = Stream.Next(state);
-            } while (!Stream.GetBV(state) || Filter(Stream.GetPayload(state)));
-
-            return state;
+            return Filter(Stream.GetPayload(state.i));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override UnaryBState _Init() => new UnaryBState(Stream.Init());
     }
 }
