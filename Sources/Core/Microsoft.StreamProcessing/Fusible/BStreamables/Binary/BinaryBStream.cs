@@ -77,11 +77,11 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                if (Left.GetSyncTime(state.left) < Right.GetSyncTime(state.right))
+                if (Left.GetOtherTime(state.left) < Right.GetOtherTime(state.right))
                 {
                     Left.Next(state.left);
                 }
-                else if (Left.GetSyncTime(state.left) >= Right.GetSyncTime(state.right))
+                else if (Left.GetOtherTime(state.left) >= Right.GetOtherTime(state.right))
                 {
                     Right.Next(state.right);
                 }
