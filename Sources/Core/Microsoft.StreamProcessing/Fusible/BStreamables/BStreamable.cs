@@ -3,7 +3,6 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
     public interface BStreamable<TPayload>
     {
         /// <summary>
@@ -49,7 +48,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public BState Next(BState state);
+        public void Next(BState state);
 
         /// <summary>
         /// 
@@ -67,7 +66,19 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public bool IsReady(BState state);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         public BState Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public BState SetInput(StreamMessage batch, BState state);
     }
 }

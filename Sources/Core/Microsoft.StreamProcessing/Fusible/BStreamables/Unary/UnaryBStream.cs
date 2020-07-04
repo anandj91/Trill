@@ -83,16 +83,12 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Next(TState state)
+        protected override void _Next(TState state)
         {
-            state.i = Stream.Next(state.i);
-            if (!IsDone(state) && state.i.Ready)
+            Stream.Next(state.i);
+            if (!IsDone(state) && Stream.IsReady(state.i))
             {
-                return ProcessNextItem(state);
-            }
-            else
-            {
-                return false;
+                ProcessNextItem(state);
             }
         }
 
@@ -100,6 +96,16 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected abstract bool ProcessNextItem(TState state);
+        protected abstract void ProcessNextItem(TState state);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override TState _SetInput(StreamMessage batch, TState state)
+        {
+            state.i = Stream.SetInput(batch, state.i);
+            return state;
+        }
     }
 }

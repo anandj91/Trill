@@ -3,122 +3,112 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    public class InputBState : BState
+    public class InputBState<TPayload> : BState
     {
         /// <summary>
         /// 
         /// </summary>
-        public long l;
+        public int Idx;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="l"></param>
-        public InputBState(long l)
+        public StreamMessage<Empty, TPayload> Batch;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public InputBState(StreamMessage<Empty, TPayload> batch, int idx)
         {
-            this.l = l;
+            this.Batch = batch;
+            this.Idx = idx;
         }
     }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
-    public class InputBStream<TKey, TPayload> : BStream<InputBState, TPayload>
+    public class InputBStream<TPayload> : BStream<InputBState<TPayload>, TPayload>
     {
         /// <summary>
         /// 
         /// </summary>
-        public StreamMessage<TKey, TPayload> Batch;
-
-        private long Start;
-        private long NextPos;
-        private long CurPos;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="period"></param>
-        /// <param name="offset"></param>
-        /// <param name="start"></param>
-        public InputBStream(long period, long offset, long start = 0)
-            : base(period, offset)
+        public InputBStream(long period, long offset) : base(period, offset)
         {
-            Start = start;
-            CurPos = 0;
-            NextPos = 0;
-        }
-
-        private int Idx(InputBState state) => (int) (state.l - CurPos);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override TPayload _GetPayload(InputBState state) => Batch.payload.col[Idx(state)];
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override long _GetSyncTime(InputBState state) => Batch.vsync.col[Idx(state)];
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override long _GetOtherTime(InputBState state) => Batch.vother.col[Idx(state)];
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override bool _GetBV(InputBState state)
-            => ((Batch.bitvector.col[Idx(state) >> 6] & (1L << (Idx(state) & 0x3f))) == 0);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override int _GetHash(InputBState state) => Batch.hash.col[Idx(state)];
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override bool _Next(InputBState state)
-        {
-            state.l++;
-            return !_IsDone(state) && _GetBV(state);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _IsDone(InputBState state)
-            => (Idx(state) >= Batch.Count || GetSyncTime(state) > StreamEvent.MaxSyncTime);
+        protected override TPayload _GetPayload(InputBState<TPayload> state) => state.Batch.payload.col[state.Idx];
 
         /// <summary>
         /// 
         /// </summary>
-        protected override InputBState _Init()
+        /// <returns></returns>
+        protected override long _GetSyncTime(InputBState<TPayload> state) => state.Batch.vsync.col[state.Idx];
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override long _GetOtherTime(InputBState<TPayload> state) => state.Batch.vother.col[state.Idx];
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _GetBV(InputBState<TPayload> state)
+            => ((state.Batch.bitvector.col[state.Idx >> 6] & (1L << (state.Idx & 0x3f))) == 0);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override int _GetHash(InputBState<TPayload> state) => state.Batch.hash.col[state.Idx];
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override void _Next(InputBState<TPayload> state) => state.Idx++;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _IsDone(InputBState<TPayload> state)
+            => (state.Idx >= state.Batch.Count || GetSyncTime(state) > StreamEvent.MaxSyncTime);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool _IsReady(InputBState<TPayload> state)
+            => state.Idx >= 0 && state.Idx < state.Batch.Count && _GetBV(state);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected override InputBState<TPayload> _Init()
         {
-            var state = new InputBState(Start);
-            state.Ready = true;
+            return new InputBState<TPayload>(null, -1);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override InputBState<TPayload> _SetInput(StreamMessage batch, InputBState<TPayload> state)
+        {
+            state.Batch = batch as StreamMessage<Empty, TPayload>;
+            state.Idx = 0;
             return state;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        public void SetBatch(StreamMessage<TKey, TPayload> value)
-        {
-            CurPos = NextPos;
-            Batch = value;
-            NextPos += Batch.Count;
         }
     }
 }

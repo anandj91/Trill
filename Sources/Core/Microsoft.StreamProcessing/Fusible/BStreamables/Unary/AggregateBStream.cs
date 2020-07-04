@@ -61,13 +61,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        protected override AggregateState<TAggState> _Init()
-            => new AggregateState<TAggState>(Stream.Init(), -1, Initialize());
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
         protected override TResult _GetPayload(AggregateState<TAggState> state) => Res(state.prevState);
@@ -88,9 +81,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected override bool ProcessNextItem(AggregateState<TAggState> state)
+        protected override void ProcessNextItem(AggregateState<TAggState> state)
         {
-            bool res = false;
             var item = Stream.GetPayload(state.i);
             var sync = Stream.GetSyncTime(state.i);
 
@@ -99,11 +91,24 @@ namespace Microsoft.StreamProcessing
                 state.syncTime = BeatCorrection(sync);
                 state.prevState = state.curState;
                 state.curState = Initialize();
-                res = true;
             }
 
             state.curState = Acc(state.curState, sync, item);
-            return res;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool _IsReady(AggregateState<TAggState> state)
+            => Stream.IsReady(state.i) && (state.syncTime == BeatCorrection(Stream.GetSyncTime(state.i)));
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override AggregateState<TAggState> _Init()
+            => new AggregateState<TAggState>(Stream.Init(), -1, Initialize());
     }
 }

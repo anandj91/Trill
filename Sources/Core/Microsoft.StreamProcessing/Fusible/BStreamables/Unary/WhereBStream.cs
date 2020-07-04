@@ -28,15 +28,37 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool ProcessNextItem(UnaryBState state)
+        protected override void ProcessNextItem(UnaryBState state)
         {
-            return Filter(Stream.GetPayload(state.i));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool _IsReady(UnaryBState state)
+        {
+            return Stream.IsReady(state.i) && Filter(Stream.GetPayload(state.i));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override UnaryBState _Init() => new UnaryBState(Stream.Init());
+        protected override UnaryBState _Init()
+        {
+            return new UnaryBState(Stream.Init());
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override UnaryBState _SetInput(StreamMessage batch, UnaryBState state)
+        {
+            state.i = Stream.SetInput(batch, state.i);
+            return state;
+        }
     }
 }

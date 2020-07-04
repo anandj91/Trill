@@ -50,9 +50,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected override bool ProcessNextItem(BinaryBState state)
+        protected override void ProcessNextItem(BinaryBState state)
         {
-            return Overlap(state);
         }
 
         /// <summary>
@@ -65,12 +64,19 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected override bool _IsReady(BinaryBState state) => Overlap(state);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         protected override BinaryBState _Init() => new BinaryBState(Left.Init(), Right.Init());
 
         private bool Overlap(BinaryBState state)
         {
-            return state.left.Ready && state.right.Ready &&
+            return Left.IsReady(state.left) && Right.IsReady(state.right) &&
                    (Math.Max(Left.GetSyncTime(state.left), Right.GetSyncTime(state.right)) <
                     Math.Min(Left.GetOtherTime(state.left), Right.GetOtherTime(state.right)));
         }

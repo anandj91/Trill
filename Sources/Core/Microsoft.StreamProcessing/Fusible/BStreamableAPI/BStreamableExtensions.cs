@@ -32,6 +32,22 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="source"></param>
+        /// <param name="predicate"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static BStreamable<TPayload> Where<TPayload>(
+            this BStreamable<TPayload> source, Expression<Func<TPayload, bool>> predicate)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(predicate, nameof(predicate));
+
+            return new WhereBStream<TPayload>(source, predicate.Compile());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
         /// <param name="selector"></param>
         /// <typeparam name="TPayload"></typeparam>
         /// <typeparam name="TResult"></typeparam>
@@ -45,6 +61,25 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(selector, nameof(selector));
 
             return selector(source);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="window"></param>
+        /// <param name="offset"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static BStreamable<TPayload> TumblingWindowLifetime<TPayload>(
+            this BStreamable<TPayload> source,
+            long window,
+            long offset = 0
+        )
+        {
+            Invariant.IsNotNull(source, nameof(source));
+
+            return new TumblingWindowBStream<TPayload>(source, window, offset);
         }
 
         /// <summary>

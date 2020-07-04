@@ -68,26 +68,26 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Next(TState state)
+        protected override void _Next(TState state)
         {
-            if (!state.left.Ready || !state.right.Ready)
+            if (!Left.IsReady(state.left) || !Right.IsReady(state.right))
             {
-                if (!state.left.Ready) state.left = Left.Next(state.left);
-                if (!state.right.Ready) state.right = Right.Next(state.right);
+                if (!Left.IsReady(state.left)) Left.Next(state.left);
+                if (!Right.IsReady(state.right)) Right.Next(state.right);
             }
             else
             {
                 if (Left.GetSyncTime(state.left) < Right.GetSyncTime(state.right))
                 {
-                    state.left = Left.Next(state.left);
+                    Left.Next(state.left);
                 }
                 else if (Left.GetSyncTime(state.left) >= Right.GetSyncTime(state.right))
                 {
-                    state.right = Right.Next(state.right);
+                    Right.Next(state.right);
                 }
             }
 
-            return ProcessNextItem(state);
+            ProcessNextItem(state);
         }
 
         /// <summary>
@@ -95,6 +95,17 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected abstract bool ProcessNextItem(TState state);
+        protected abstract void ProcessNextItem(TState state);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override TState _SetInput(StreamMessage batch, TState state)
+        {
+            state.left = Left.SetInput(batch, state.left);
+            state.right = Right.SetInput(batch, state.right);
+            return state;
+        }
     }
 }

@@ -68,14 +68,13 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        public BState Next(BState state)
+        public void Next(BState state)
         {
-            state.Ready = false;
-            while (!IsDone(state) && !state.Ready)
+            while (!IsDone(state))
             {
-                state.Ready = _Next((TState) state);
+                _Next((TState) state);
+                if (IsReady(state)) break;
             }
-            return state;
         }
 
         /// <summary>
@@ -83,13 +82,26 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        public bool IsDone(BState state) => _IsDone((TState) state);
-        
+        public bool IsDone(BState state) => _IsDone(state as TState);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public bool IsReady(BState state) => _IsReady(state as TState);
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public BState Init() => _Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public BState SetInput(StreamMessage batch, BState state) => _SetInput(batch, (TState) state);
 
         /// <summary>
         /// 
@@ -141,7 +153,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected abstract bool _Next(TState state);
+        protected abstract void _Next(TState state);
 
         /// <summary>
         /// 
@@ -153,7 +165,20 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        protected abstract bool _IsReady(TState state);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         protected abstract TState _Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected abstract TState _SetInput(StreamMessage batch, TState state);
     }
 }
