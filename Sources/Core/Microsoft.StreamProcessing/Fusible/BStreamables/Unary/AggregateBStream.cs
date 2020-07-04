@@ -12,6 +12,7 @@ namespace Microsoft.StreamProcessing
         internal long syncTime;
         internal TAggState curState;
         internal TAggState prevState;
+        internal bool ready { get; set; }
 
         /// <summary>
         /// 
@@ -21,6 +22,7 @@ namespace Microsoft.StreamProcessing
             this.curState = state;
             this.prevState = state;
             this.syncTime = time;
+            this.ready = false;
         }
     }
 
@@ -83,14 +85,16 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override void ProcessNextItem(AggregateState<TAggState> state)
         {
+            state.ready = false;
             var item = Stream.GetPayload(state.i);
             var sync = Stream.GetSyncTime(state.i);
 
             if (state.syncTime < sync)
             {
-                state.syncTime = BeatCorrection(sync);
+                state.syncTime = sync;
                 state.prevState = state.curState;
                 state.curState = Initialize();
+                state.ready = true;
             }
 
             state.curState = Acc(state.curState, sync, item);
@@ -101,8 +105,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected override bool _IsReady(AggregateState<TAggState> state)
-            => Stream.IsReady(state.i) && (state.syncTime == BeatCorrection(Stream.GetSyncTime(state.i)));
+        protected override bool _IsReady(AggregateState<TAggState> state) => Stream.IsReady(state.i) && state.ready;
 
         /// <summary>
         /// 
