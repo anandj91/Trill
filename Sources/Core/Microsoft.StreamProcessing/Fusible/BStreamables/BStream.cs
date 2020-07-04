@@ -110,7 +110,8 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public long BeatCorrection(long t)
         {
-            return t + Period - ((t - Offset) % Period);
+            var cor = ((t - Offset) % Period);
+            return (cor == 0) ? t : t + Period - cor;
         }
 
         /// <summary>

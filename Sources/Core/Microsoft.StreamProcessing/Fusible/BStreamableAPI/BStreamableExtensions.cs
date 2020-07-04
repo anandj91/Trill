@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="offset"></param>
         /// <typeparam name="TPayload"></typeparam>
         /// <returns></returns>
-        public static BStreamable<TPayload> TumblingWindowLifetime<TPayload>(
+        public static TumblingWindowBStream<TPayload> TumblingWindowLifetime<TPayload>(
             this BStreamable<TPayload> source,
             long window,
             long offset = 0

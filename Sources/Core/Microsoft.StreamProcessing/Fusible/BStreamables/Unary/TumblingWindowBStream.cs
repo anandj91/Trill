@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected override bool _IsReady(UnaryBState state) => Stream.IsDone(state.i);
+        protected override bool _IsReady(UnaryBState state) => Stream.IsReady(state.i);
 
         /// <summary>
         /// 
