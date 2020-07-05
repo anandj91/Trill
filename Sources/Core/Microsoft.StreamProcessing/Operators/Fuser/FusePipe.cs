@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
             var iop = new FInputOperation<TPayload>(stream.Period, stream.Offset);
-            fwindow = Transform(iop).Compile(1);
+            fwindow = Transform(iop).Compile(25);
             iwindow = iop.GetInputFWindow();
         }
 
@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if (fwindow.BV[i])
                     {
-                        AddToBatch(fwindow.Sync[i], fwindow.Other[i], default, fwindow.Payload[i], 0);   
+                        AddToBatch(fwindow.Sync[i], fwindow.Other[i], default, fwindow.Payload[i], 0);
                     }
                 }
             } while (iwindow.Slide());

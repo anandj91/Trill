@@ -7,7 +7,7 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class FSubInputWindow<T> : FSubWindow<T>
+    public class InputFSubWindow<T> : FSubWindow<T>
     {
         /// <summary>
         /// 
@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public FSubInputWindow(int size, T[] data) : base(size, data)
+        public InputFSubWindow(int size, T[] data) : base(size, data)
         {
             Offset = 0;
         }
@@ -31,9 +31,61 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public FSubInputWindow(int size) : base(size)
+        public InputFSubWindow(int size) : base(size)
         {
             Offset = 0;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class InputBVFSubWindow : FSubWindowable<bool>
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public long[] BV;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public InputFSubWindow<long> Sync;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Offset;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Count;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Size { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="i"></param>
+        public bool this[int i]
+            => Offset + i < Count
+               && ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0)
+               && (Sync[i] < StreamEvent.MaxSyncTime);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public InputBVFSubWindow(int size, long[] bv, InputFSubWindow<long> sync, int count)
+        {
+            BV = bv;
+            Sync = sync;
+            Size = size;
+            Offset = 0;
+            Count = count;
         }
     }
 
@@ -46,10 +98,10 @@ namespace Microsoft.StreamProcessing
         private int Idx;
         private int Count;
 
-        private FSubInputWindow<TPayload> _payload;
-        private FSubInputWindow<long> _sync;
-        private FSubInputWindow<long> _other;
-        private FSubInputWindow<bool> _bv;
+        private InputFSubWindow<TPayload> _payload;
+        private InputFSubWindow<long> _sync;
+        private InputFSubWindow<long> _other;
+        private InputBVFSubWindow _bv;
 
         /// <summary>
         /// 
@@ -57,10 +109,10 @@ namespace Microsoft.StreamProcessing
         public InputFWindow(long size, long period, long offset) : base(size, period, offset)
         {
             var s = Length;
-            _payload = new FSubInputWindow<TPayload>(s);
-            _sync = new FSubInputWindow<long>(s);
-            _other = new FSubInputWindow<long>(s);
-            _bv = new FSubInputWindow<bool>(s);
+            _payload = new InputFSubWindow<TPayload>(s);
+            _sync = new InputFSubWindow<long>(s);
+            _other = new InputFSubWindow<long>(s);
+            _bv = new InputBVFSubWindow(s, default, _sync, 0);
         }
 
         /// <summary>
@@ -119,11 +171,12 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public bool Slide()
         {
-            //TODO: Need to deal with gaps and bitvector
+            //TODO: Need to deal with gaps
             Idx += Length;
-            ((FSubInputWindow<TPayload>) Payload).Offset = Idx;
-            ((FSubInputWindow<long>) Sync).Offset = Idx;
-            ((FSubInputWindow<long>) Other).Offset = Idx;
+            ((InputFSubWindow<TPayload>) Payload).Offset = Idx;
+            ((InputFSubWindow<long>) Sync).Offset = Idx;
+            ((InputFSubWindow<long>) Other).Offset = Idx;
+            ((InputBVFSubWindow) BV).Offset = Idx;
             return Idx < Count;
         }
 
@@ -141,20 +194,16 @@ namespace Microsoft.StreamProcessing
         {
             Idx = 0;
             Count = batch.Count;
-            //TODO: Need to deal with gaps and bitvector
-            var s = Length;
+            //TODO: Need to deal with gaps
             _payload.Data = batch.payload.col;
             _payload.Offset = 0;
             _sync.Data = batch.vsync.col;
             _sync.Offset = 0;
             _other.Data = batch.vother.col;
             _other.Offset = 0;
-            _bv.Data = new bool[Count];
+            _bv.BV = batch.bitvector.col;
             _bv.Offset = 0;
-            for (int i = 0; i < Count; i++)
-            {
-                if ((batch.bitvector.col[i >> 6] & (1L << (i & 0x3f))) == 0) _bv.Data[i] = true;
-            }
+            _bv.Count = Count;
         }
     }
 }
