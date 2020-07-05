@@ -1188,7 +1188,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="offset"></param>
         public static IStreamable<Empty, TResult> Fuse<TPayload, TResult>(
             this IStreamable<Empty, TPayload> source,
-            Func<InputBStream<TPayload>, BStreamable<TResult>> transform,
+            Func<FOperation<TPayload>, FOperation<TResult>> transform,
             long period, long offset)
         {
             Invariant.IsNotNull(source, nameof(source));

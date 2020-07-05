@@ -551,13 +551,14 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<TKey, TPayload> Where(Expression<Func<TPayload, bool>> predicate) => this;
 
         internal StreamProperties<TKey, TResult> Fuse<TResult>(
-            Func<InputBStream<TPayload>, BStreamable<TResult>> Transform,
+            Func<FOperation<TPayload>, FOperation<TResult>> Transform,
             long period, long offset
         )
         {
-            var bstream = Transform(new InputBStream<TPayload>(period, offset));
+            var fop = Transform(new FInputOperation<TPayload>(period, offset));
+            var fwin = fop.Compile(1);
             return new StreamProperties<TKey, TResult>(
-                false, true, bstream.Period, true, bstream.Period, bstream.Offset, false, true, true, true,
+                false, true, fwin.Period, true, fwin.Period, fwin.Offset, false, true, true, true,
                 this.KeyEqualityComparer, EqualityComparerExpression<TResult>.Default,
                 this.KeyComparer, ComparerExpression<TResult>.Default,
                 new Dictionary<Expression, object>(), new Dictionary<Expression, Guid?>(), this.QueryContainer);

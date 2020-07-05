@@ -8,10 +8,10 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class FusePipe<TPayload, TResult> : UnaryPipe<Empty, TPayload, TResult>
     {
-        [SchemaSerialization] private Func<InputBStream<TPayload>, BStreamable<TResult>> Transform;
+        [SchemaSerialization] private Func<FOperation<TPayload>, FOperation<TResult>> Transform;
         private readonly MemoryPool<Empty, TResult> pool;
-        private BStreamable<TResult> bstream;
-        private BState bstate;
+        private FWindowable<TResult> fwindow;
+        private InputFWindow<TPayload> iwindow;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -27,8 +27,9 @@ namespace Microsoft.StreamProcessing
             this.pool = MemoryManager.GetMemoryPool<Empty, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
             this.output.Allocate();
-            bstream = Transform(new InputBStream<TPayload>(stream.Period, stream.Offset));
-            bstate = bstream.Init();
+            var iop = new FInputOperation<TPayload>(stream.Period, stream.Offset);
+            fwindow = Transform(iop).Compile(1);
+            iwindow = iop.GetInputFWindow();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -38,18 +39,18 @@ namespace Microsoft.StreamProcessing
 
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
-            bstate = bstream.SetInput(batch, bstate);
-            while (!bstream.IsDone(bstate))
+            iwindow.SetBatch(batch);
+            do
             {
-                if (bstream.IsReady(bstate))
+                fwindow.Compute();
+                for (int i = 0; i < fwindow.Length; i++)
                 {
-                    AddToBatch(
-                        bstream.GetSyncTime(bstate), bstream.GetOtherTime(bstate), default,
-                        bstream.GetPayload(bstate), bstream.GetHash(bstate));
+                    if (fwindow.BV[i])
+                    {
+                        AddToBatch(fwindow.Sync[i], fwindow.Other[i], default, fwindow.Payload[i], 0);   
+                    }
                 }
-
-                bstream.Next(bstate);
-            }
+            } while (iwindow.Slide());
 
             batch.payload.Return();
             batch.Return();

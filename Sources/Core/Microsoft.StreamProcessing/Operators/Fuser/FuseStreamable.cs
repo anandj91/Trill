@@ -5,12 +5,12 @@ namespace Microsoft.StreamProcessing
 {
     internal sealed class FuseStreamable<TPayload, TResult> : UnaryStreamable<Empty, TPayload, TResult>
     {
-        public Func<InputBStream<TPayload>, BStreamable<TResult>> Transform;
+        public Func<FOperation<TPayload>, FOperation<TResult>> Transform;
         public long Period;
         public long Offset;
 
         public FuseStreamable(IStreamable<Empty, TPayload> source,
-            Func<InputBStream<TPayload>, BStreamable<TResult>> transform,
+            Func<FOperation<TPayload>, FOperation<TResult>> transform,
             long period, long offset)
             : base(source, source.Properties.Fuse(transform, period, offset))
         {
