@@ -8,7 +8,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public int Size { get; }
+        public int Length { get; }
 
         /// <summary>
         /// 

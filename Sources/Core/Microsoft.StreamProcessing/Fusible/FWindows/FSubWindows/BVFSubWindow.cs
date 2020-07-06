@@ -3,13 +3,12 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class FSubWindow<T> : FSubWindowable<T>
+    public class BVFSubWindow : FSubWindowable<bool>
     {
         /// <summary>
         /// 
         /// </summary>
-        public T[] Data;
+        public long[] BV;
 
         /// <summary>
         /// 
@@ -20,24 +19,28 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="i"></param>
-        public virtual T this[int i] => Data[i];
+        public virtual bool this[int i] => ((BV[i >> 6] & (1L << (i & 0x3f))) == 0);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="length"></param>
-        /// <param name="data"></param>
-        public FSubWindow(int length, T[] data)
+        /// <param name="bv"></param>
+        public BVFSubWindow(int length, long[] bv)
         {
             Length = length;
-            Data = data;
+            BV = bv;
+            for (int i = Length; i < bv.Length * (1 << 6); i++)
+            {
+                BV[i >> 6] |= (1L << (i & 0x3f));
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="length"></param>
-        public FSubWindow(int length) : this(length, new T[length])
+        public BVFSubWindow(int length) : this(length, new long[(length >> 6) + 1])
         {
         }
     }

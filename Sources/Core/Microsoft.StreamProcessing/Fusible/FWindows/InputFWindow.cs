@@ -6,104 +6,26 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class InputFSubWindow<T> : FSubWindow<T>
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Offset;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="i"></param>
-        public override T this[int i] => base[Offset + i];
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public InputFSubWindow(int size, T[] data) : base(size, data)
-        {
-            Offset = 0;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public InputFSubWindow(int size) : base(size)
-        {
-            Offset = 0;
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class InputBVFSubWindow : FSubWindowable<bool>
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public long[] BV;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Offset;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Count;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Size { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="i"></param>
-        public bool this[int i] => ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public InputBVFSubWindow(int size, long[] bv, int count)
-        {
-            BV = bv;
-            Size = size;
-            Offset = 0;
-            Count = count;
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
     /// <typeparam name="TPayload"></typeparam>
     public class InputFWindow<TPayload> : FWindow<TPayload>
     {
         private int Idx;
         private int Count;
 
-        private InputFSubWindow<TPayload> _payload;
-        private InputFSubWindow<long> _sync;
-        private InputFSubWindow<long> _other;
-        private InputBVFSubWindow _bv;
+        private OffsetFSubWindow<TPayload> _payload;
+        private OffsetFSubWindow<long> _sync;
+        private OffsetFSubWindow<long> _other;
+        private OffsetFSubWindow<bool> _bv;
 
         /// <summary>
         /// 
         /// </summary>
         public InputFWindow(long size, long period, long offset) : base(size, period, offset)
         {
-            var s = Length;
-            _payload = new InputFSubWindow<TPayload>(s);
-            _sync = new InputFSubWindow<long>(s);
-            _other = new InputFSubWindow<long>(s);
-            _bv = new InputBVFSubWindow(s, default, 0);
+            _payload = new OffsetFSubWindow<TPayload>(Length, new FSubWindow<TPayload>(Length));
+            _sync = new OffsetFSubWindow<long>(Length, new FSubWindow<long>(Length));
+            _other = new OffsetFSubWindow<long>(Length, new FSubWindow<long>(Length));
+            _bv = new OffsetFSubWindow<bool>(Length, new BVFSubWindow(Length));
         }
 
         /// <summary>
@@ -164,10 +86,10 @@ namespace Microsoft.StreamProcessing
         {
             //TODO: Need to deal with gaps
             Idx += Length;
-            ((InputFSubWindow<TPayload>) Payload).Offset = Idx;
-            ((InputFSubWindow<long>) Sync).Offset = Idx;
-            ((InputFSubWindow<long>) Other).Offset = Idx;
-            ((InputBVFSubWindow) BV).Offset = Idx;
+            ((OffsetFSubWindow<TPayload>) Payload).Offset = Idx;
+            ((OffsetFSubWindow<long>) Sync).Offset = Idx;
+            ((OffsetFSubWindow<long>) Other).Offset = Idx;
+            ((OffsetFSubWindow<bool>) BV).Offset = Idx;
             return Idx < Count;
         }
 
@@ -184,15 +106,14 @@ namespace Microsoft.StreamProcessing
             Idx = 0;
             Count = batch.Count;
             //TODO: Need to deal with gaps
-            _payload.Data = batch.payload.col;
+            ((FSubWindow<TPayload>) _payload.Base).Data = batch.payload.col;
             _payload.Offset = 0;
-            _sync.Data = batch.vsync.col;
+            ((FSubWindow<long>) _sync.Base).Data = batch.vsync.col;
             _sync.Offset = 0;
-            _other.Data = batch.vother.col;
+            ((FSubWindow<long>) _other.Base).Data = batch.vother.col;
             _other.Offset = 0;
-            _bv.BV = batch.bitvector.col;
+            ((BVFSubWindow) _bv.Base).BV = batch.bitvector.col;
             _bv.Offset = 0;
-            _bv.Count = Count;
         }
     }
 }
