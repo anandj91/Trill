@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
                 }
             } while (iwindow.Slide());
 
-            batch.payload.Return();
+            batch.Release();
             batch.Return();
             FlushContents();
         }

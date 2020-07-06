@@ -41,7 +41,9 @@ namespace Microsoft.StreamProcessing
             var tmp = Input.Compile(1);
             var iperiod = tmp.Period;
             var ifactor = (int) (_window / iperiod) / tmp.Length;
-            return new AggregateFWindow<TPayload, TAggState, TResult>(Input.Compile(ifactor), _aggregate, _window);
+            return new AggregateFWindow<TPayload, TAggState, TResult>(
+                Input.Compile(ifactor * factor), _aggregate, _window
+            );
         }
     }
 }
