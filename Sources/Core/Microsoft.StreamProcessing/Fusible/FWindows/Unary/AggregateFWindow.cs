@@ -55,24 +55,41 @@ namespace Microsoft.StreamProcessing
             var ilen = Input.Compute();
             int olen = 0;
 
-            for (int i = 0; i < ilen; i++)
-            {
-                // TODO: Flush at the end of stream
-                if (Input.BV[i])
-                {
-                    var item = Input.Payload[i];
-                    var sync = Input.Sync[i];
-                    if (sync % Period == 0)
-                    {
-                        var result = _res(_state);
-                        _state = _init();
-                        _Payload.Data[olen] = result;
-                        _Sync.Data[olen] = sync;
-                        _Other.Data[olen] = sync + Period;
-                        olen++;
-                    }
+            var period = Period;
+            var payload = Input.Payload.Data;
+            var payloadOffset = Input.Payload.Offset;
+            var bvOffset = Input.BV.Offset;
+            var syncOffset = Input.Sync.Offset;
 
-                    _state = _acc(_state, sync, item);
+            unsafe
+            {
+                fixed (long* bv = Input.BV.Data)
+                fixed (long* vsync = Input.Sync.Data)
+                {
+                    for (int i = 0; i < ilen; i++)
+                    {
+                        // TODO: Flush at the end of stream
+                        var bi = bvOffset + i;
+                        if ((bv[bi >> 6] & (1L << (bi & 0x3f))) == 0)
+                        {
+                            var pi = payloadOffset + i;
+                            var si = syncOffset + i;
+
+                            var item = payload[pi];
+                            var sync = vsync[si];
+                            if (sync % period == 0)
+                            {
+                                var result = _res(_state);
+                                _state = _init();
+                                _Payload.Data[olen] = result;
+                                _Sync.Data[olen] = sync;
+                                _Other.Data[olen] = sync + Period;
+                                olen++;
+                            }
+
+                            _state = _acc(_state, sync, item);
+                        }
+                    }
                 }
             }
 
