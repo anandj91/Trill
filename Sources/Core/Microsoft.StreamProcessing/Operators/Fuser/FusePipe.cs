@@ -40,10 +40,11 @@ namespace Microsoft.StreamProcessing
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             iwindow.SetBatch(batch);
+            var len = fwindow.Length;
             do
             {
                 fwindow.Compute();
-                for (int i = 0; i < fwindow.Length; i++)
+                for (int i = 0; i < len; i++)
                 {
                     if (fwindow.BV[i])
                     {

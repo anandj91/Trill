@@ -50,11 +50,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public InputFSubWindow<long> Sync;
-
-        /// <summary>
-        /// 
-        /// </summary>
         public int Offset;
 
         /// <summary>
@@ -72,17 +67,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="i"></param>
         public bool this[int i]
-            => Offset + i < Count
-               && ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0)
-               && (Sync[i] < StreamEvent.MaxSyncTime);
+            => Offset + i < Count && ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
 
         /// <summary>
         /// 
         /// </summary>
-        public InputBVFSubWindow(int size, long[] bv, InputFSubWindow<long> sync, int count)
+        public InputBVFSubWindow(int size, long[] bv, int count)
         {
             BV = bv;
-            Sync = sync;
             Size = size;
             Offset = 0;
             Count = count;
@@ -112,7 +104,7 @@ namespace Microsoft.StreamProcessing
             _payload = new InputFSubWindow<TPayload>(s);
             _sync = new InputFSubWindow<long>(s);
             _other = new InputFSubWindow<long>(s);
-            _bv = new InputBVFSubWindow(s, default, _sync, 0);
+            _bv = new InputBVFSubWindow(s, default, 0);
         }
 
         /// <summary>
