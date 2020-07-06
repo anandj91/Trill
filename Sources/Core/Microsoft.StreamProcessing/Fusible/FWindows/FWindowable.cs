@@ -73,6 +73,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public void Compute();
+        public int Compute();
     }
 }

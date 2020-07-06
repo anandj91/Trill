@@ -9,8 +9,6 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     public abstract class FWindow<TPayload> : FWindowable<TPayload>
     {
-        private bool isComputed;
-
         /// <summary>
         /// 
         /// </summary>
@@ -29,10 +27,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public int Length
-        {
-            get { return (int) (Size / Period); }
-        }
+        public int Length { get; }
 
         /// <summary>
         /// 
@@ -42,7 +37,7 @@ namespace Microsoft.StreamProcessing
             Size = size;
             Period = period;
             Offset = offset;
-            isComputed = false;
+            Length = (int) (Size / Period);
         }
 
         /// <summary>
@@ -86,15 +81,12 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public void Compute()
-        {
-            if (!isComputed) _Compute();
-            isComputed = true;
-        }
+        public int Compute() => _Compute();
 
         /// <summary>
         /// 
         /// </summary>
-        protected abstract void _Compute();
+        /// <returns></returns>
+        protected abstract int _Compute();
     }
 }

@@ -66,8 +66,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="i"></param>
-        public bool this[int i]
-            => Offset + i < Count && ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
+        public bool this[int i] => ((BV[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
 
         /// <summary>
         /// 
@@ -175,9 +174,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override void _Compute()
-        {
-        }
+        protected override int _Compute() => Math.Min(Length, Count - Idx);
 
         /// <summary>
         /// 

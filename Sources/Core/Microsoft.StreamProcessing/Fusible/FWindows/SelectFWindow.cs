@@ -110,6 +110,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override void _Compute() => Input.Compute();
+        protected override int _Compute() => Input.Compute();
     }
 }

@@ -40,36 +40,31 @@ namespace Microsoft.StreamProcessing
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             iwindow.SetBatch(batch);
-            var len = fwindow.Length;
             do
             {
-                fwindow.Compute();
+                var len = fwindow.Compute();
                 for (int i = 0; i < len; i++)
                 {
-                    if (fwindow.BV[i])
+                    int index = this.output.Count++;
+                    if (!fwindow.BV[i]) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                    this.output.vsync.col[index] = fwindow.Sync[i];
+                    this.output.vother.col[index] = fwindow.Other[i];
+                    if (fwindow.Other[i] == StreamEvent.PunctuationOtherTime)
                     {
-                        AddToBatch(fwindow.Sync[i], fwindow.Other[i], default, fwindow.Payload[i], 0);
+                        FlushContents();
                     }
+                    else
+                    {
+                        this.output.payload.col[index] = fwindow.Payload[i];
+                    }
+
+                    if (this.output.Count == Config.DataBatchSize) FlushContents();
                 }
             } while (iwindow.Slide());
 
             batch.payload.Return();
             batch.Return();
             FlushContents();
-        }
-
-        private void AddToBatch(long start, long end, Empty key, TResult payload, int hash)
-        {
-            int index = this.output.Count++;
-            this.output.vsync.col[index] = start;
-            this.output.vother.col[index] = end;
-            this.output.key.col[index] = key;
-            this.output.payload.col[index] = payload;
-            this.output.hash.col[index] = hash;
-            if (end == StreamEvent.PunctuationOtherTime)
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
-
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
         }
 
         protected override void FlushContents()
