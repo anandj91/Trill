@@ -22,7 +22,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="i"></param>
-        public bool this[int i] => _bv[i] && _payload[i] != null && _filter(_payload[i]);
+        public bool this[int i] => _bv[i] && _filter(_payload[i]);
 
         /// <summary>
         /// 
