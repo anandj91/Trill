@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing.FOperationAPI
 {
@@ -43,6 +44,37 @@ namespace Microsoft.StreamProcessing.FOperationAPI
             Invariant.IsNotNull(predicate, nameof(predicate));
 
             return new WhereFOperation<TPayload>(source, predicate);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="aggregate"></param>
+        /// <param name="window"></param>
+        /// <param name="period"></param>
+        /// <param name="offset"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TAggState"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TResult> Aggregate<TPayload, TAggState, TResult>(
+            this FOperation<TPayload> source,
+            Func<Window<Empty, TPayload>, IAggregate<TPayload, TAggState, TResult>> aggregate,
+            long window, long period, long offset = 0
+        )
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(aggregate, nameof(aggregate));
+            var tmp = source.Compile(1);
+            var p = new StreamProperties<Empty, TPayload>(
+                false, true, tmp.Period, true, period, offset, false, true, true, true,
+                EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<TPayload>.Default,
+                ComparerExpression<Empty>.Default, ComparerExpression<TPayload>.Default, null, null, null
+            );
+            return new AggregateFOperation<TPayload, TAggState, TResult>(
+                source, aggregate(new Window<Empty, TPayload>(p)), window, period, offset
+            );
         }
     }
 }
