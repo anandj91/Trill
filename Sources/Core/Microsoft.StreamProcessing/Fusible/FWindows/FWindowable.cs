@@ -32,43 +32,25 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public FSubWindowable<TPayload> Payload { get; }
+        public FSubWindowable<TPayload, TPayload> Payload { get; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public FSubWindowable<long> Sync { get; }
+        public FSubWindowable<long, long> Sync { get; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public FSubWindowable<long> Other { get; }
+        public FSubWindowable<long, long> Other { get; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public FSubWindowable<bool> BV { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public long GetInputSize();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public Expression<Func<long, long>> GetInputSync();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public Expression<Func<long, long>> GetOutputSync();
+        public FSubWindowable<long, bool> BV { get; }
 
         /// <summary>
         /// 

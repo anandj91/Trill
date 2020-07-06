@@ -1,5 +1,4 @@
 using System;
-using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing
 {
@@ -12,71 +11,12 @@ namespace Microsoft.StreamProcessing
         private int Idx;
         private int Count;
 
-        private OffsetFSubWindow<TPayload> _payload;
-        private OffsetFSubWindow<long> _sync;
-        private OffsetFSubWindow<long> _other;
-        private OffsetFSubWindow<bool> _bv;
-
         /// <summary>
         /// 
         /// </summary>
         public InputFWindow(long size, long period, long offset) : base(size, period, offset)
         {
-            _payload = new OffsetFSubWindow<TPayload>(Length, new FSubWindow<TPayload>(Length));
-            _sync = new OffsetFSubWindow<long>(Length, new FSubWindow<long>(Length));
-            _other = new OffsetFSubWindow<long>(Length, new FSubWindow<long>(Length));
-            _bv = new OffsetFSubWindow<bool>(Length, new BVFSubWindow(Length));
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<TPayload> Payload
-        {
-            get { return _payload; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<long> Sync
-        {
-            get { return _sync; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<long> Other
-        {
-            get { return _other; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<bool> BV
-        {
-            get { return _bv; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override long GetInputSize() => Size;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override Expression<Func<long, long>> GetInputSync() => (t) => t;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override Expression<Func<long, long>> GetOutputSync() => (t) => t;
 
         /// <summary>
         /// 
@@ -86,10 +26,10 @@ namespace Microsoft.StreamProcessing
         {
             //TODO: Need to deal with gaps
             Idx += Length;
-            ((OffsetFSubWindow<TPayload>) Payload).Offset = Idx;
-            ((OffsetFSubWindow<long>) Sync).Offset = Idx;
-            ((OffsetFSubWindow<long>) Other).Offset = Idx;
-            ((OffsetFSubWindow<bool>) BV).Offset = Idx;
+            Payload.Offset = Idx;
+            Sync.Offset = Idx;
+            Other.Offset = Idx;
+            BV.Offset = Idx;
             return Idx < Count;
         }
 
@@ -106,14 +46,14 @@ namespace Microsoft.StreamProcessing
             Idx = 0;
             Count = batch.Count;
             //TODO: Need to deal with gaps
-            ((FSubWindow<TPayload>) _payload.Base).Data = batch.payload.col;
-            _payload.Offset = 0;
-            ((FSubWindow<long>) _sync.Base).Data = batch.vsync.col;
-            _sync.Offset = 0;
-            ((FSubWindow<long>) _other.Base).Data = batch.vother.col;
-            _other.Offset = 0;
-            ((BVFSubWindow) _bv.Base).BV = batch.bitvector.col;
-            _bv.Offset = 0;
+            _Payload.Data = batch.payload.col;
+            _Payload.Offset = 0;
+            _Sync.Data = batch.vsync.col;
+            _Sync.Offset = 0;
+            _Other.Data = batch.vother.col;
+            _Other.Offset = 0;
+            _BV.Data = batch.bitvector.col;
+            _BV.Offset = 0;
         }
     }
 }

@@ -4,12 +4,12 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class FSubWindow<T> : FSubWindowable<T>
+    public class FSubWindow<T> : FSubWindowable<T, T>
     {
         /// <summary>
         /// 
         /// </summary>
-        public T[] Data;
+        public T[] Data { get; set; }
 
         /// <summary>
         /// 
@@ -19,25 +19,32 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public int Offset { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="i"></param>
-        public virtual T this[int i] => Data[i];
+        public virtual T this[int i] => Data[Offset + i];
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="length"></param>
         /// <param name="data"></param>
-        public FSubWindow(int length, T[] data)
+        /// <param name="offset"></param>
+        public FSubWindow(int length, int offset, T[] data)
         {
             Length = length;
             Data = data;
+            Offset = offset;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="length"></param>
-        public FSubWindow(int length) : this(length, new T[length])
+        public FSubWindow(int length) : this(length, 0, new T[length])
         {
         }
     }

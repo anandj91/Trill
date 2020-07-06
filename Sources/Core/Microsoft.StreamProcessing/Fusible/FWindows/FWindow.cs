@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -9,6 +6,26 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     public abstract class FWindow<TPayload> : FWindowable<TPayload>
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        protected FSubWindow<TPayload> _Payload;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected FSubWindow<long> _Sync;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected FSubWindow<long> _Other;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected BVFSubWindow _BV;
+
         /// <summary>
         /// 
         /// </summary>
@@ -32,51 +49,52 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="size"></param>
+        /// <param name="period"></param>
+        /// <param name="offset"></param>
         public FWindow(long size, long period, long offset)
         {
             Size = size;
             Period = period;
             Offset = offset;
-            Length = (int) (Size / Period);
+            Length = (int) (Size / period);
+            _Payload = new FSubWindow<TPayload>(Length);
+            _Sync = new FSubWindow<long>(Length);
+            _Other = new FSubWindow<long>(Length);
+            _BV = new BVFSubWindow(Length);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public abstract FSubWindowable<TPayload> Payload { get; }
+        public FSubWindowable<TPayload, TPayload> Payload
+        {
+            get { return _Payload; }
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public abstract FSubWindowable<long> Sync { get; }
+        public FSubWindowable<long, long> Sync
+        {
+            get { return _Sync; }
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public abstract FSubWindowable<long> Other { get; }
+        public FSubWindowable<long, long> Other
+        {
+            get { return _Other; }
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public abstract FSubWindowable<bool> BV { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public abstract long GetInputSize();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public abstract Expression<Func<long, long>> GetInputSync();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public abstract Expression<Func<long, long>> GetOutputSync();
+        public FSubWindowable<long, bool> BV
+        {
+            get { return _BV; }
+        }
 
         /// <summary>
         /// 

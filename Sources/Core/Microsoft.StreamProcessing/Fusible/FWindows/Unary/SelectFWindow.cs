@@ -11,7 +11,6 @@ namespace Microsoft.StreamProcessing
     public class SelectFWindow<TPayload, TResult> : UnaryFWindow<TPayload, TResult>
     {
         private Func<TPayload, TResult> _selector;
-        private FSubWindow<TResult> _payload;
 
         /// <summary>
         /// 
@@ -20,58 +19,11 @@ namespace Microsoft.StreamProcessing
             : base(input, input.Size, input.Period, input.Offset)
         {
             _selector = selector.Compile();
-            _payload = new FSubWindow<TResult>(Length);
+            _Payload = new FSubWindow<TResult>(Length);
+            _Sync = Input.Sync as FSubWindow<long>;
+            _Other = Input.Other as FSubWindow<long>;
+            _BV = Input.BV as BVFSubWindow;
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<TResult> Payload
-        {
-            get { return _payload; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<long> Sync
-        {
-            get { return Input.Sync; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<long> Other
-        {
-            get { return Input.Other; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override FSubWindowable<bool> BV
-        {
-            get { return Input.BV; }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override long GetInputSize() => Input.GetInputSize();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override Expression<Func<long, long>> GetInputSync() => Input.GetInputSync();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override Expression<Func<long, long>> GetOutputSync() => Input.GetOutputSync();
 
         /// <summary>
         /// 
@@ -84,7 +36,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (BV[i])
                 {
-                    _payload.Data[i] = _selector(Input.Payload[i]);
+                    _Payload.Data[i] = _selector(Input.Payload[i]);
                 }
             }
 

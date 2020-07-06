@@ -3,12 +3,12 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    public class BVFSubWindow : FSubWindowable<bool>
+    public class BVFSubWindow : FSubWindowable<long, bool>
     {
         /// <summary>
         /// 
         /// </summary>
-        public long[] BV;
+        public long[] Data { get; set; }
 
         /// <summary>
         /// 
@@ -18,21 +18,28 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public int Offset { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="i"></param>
-        public virtual bool this[int i] => ((BV[i >> 6] & (1L << (i & 0x3f))) == 0);
+        public virtual bool this[int i] => ((Data[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="length"></param>
-        /// <param name="bv"></param>
-        public BVFSubWindow(int length, long[] bv)
+        /// <param name="offset"></param>
+        /// <param name="data"></param>
+        public BVFSubWindow(int length, int offset, long[] data)
         {
             Length = length;
-            BV = bv;
-            for (int i = Length; i < bv.Length * (1 << 6); i++)
+            Offset = offset;
+            Data = data;
+            for (int i = Length; i < data.Length * (1 << 6); i++)
             {
-                BV[i >> 6] |= (1L << (i & 0x3f));
+                Data[i >> 6] |= (1L << (i & 0x3f));
             }
         }
 
@@ -40,7 +47,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="length"></param>
-        public BVFSubWindow(int length) : this(length, new long[(length >> 6) + 1])
+        public BVFSubWindow(int length) : this(length, 0, new long[(length >> 6) + 1])
         {
         }
     }
