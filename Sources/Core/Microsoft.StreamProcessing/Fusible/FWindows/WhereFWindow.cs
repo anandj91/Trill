@@ -7,43 +7,10 @@ namespace Microsoft.StreamProcessing
     /// 
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
-    public class WhereBVFSubWindow<TPayload> : FSubWindowable<bool>
-    {
-        private FSubWindowable<TPayload> _payload;
-        private FSubWindowable<bool> _bv;
-        private Func<TPayload, bool> _filter;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Size { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="i"></param>
-        public bool this[int i] => _bv[i] && _filter(_payload[i]);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public WhereBVFSubWindow(int size, FSubWindowable<bool> bv, FSubWindowable<TPayload> payload,
-            Func<TPayload, bool> filter)
-        {
-            Size = size;
-            _payload = payload;
-            _bv = bv;
-            _filter = filter;
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
     public class WhereFWindow<TPayload> : UnaryFWindow<TPayload, TPayload>
     {
-        private WhereBVFSubWindow<TPayload> _bv;
+        private Func<TPayload, bool> _filter;
+        private BVFSubWindow _bv;
 
         /// <summary>
         /// 
@@ -53,7 +20,8 @@ namespace Microsoft.StreamProcessing
         public WhereFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, bool>> filter)
             : base(input, input.Size, input.Period, input.Offset)
         {
-            _bv = new WhereBVFSubWindow<TPayload>(Input.BV.Size, Input.BV, Input.Payload, filter.Compile());
+            _bv = new BVFSubWindow(Length);
+            _filter = filter.Compile();
         }
 
         /// <summary>
@@ -109,6 +77,30 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override int _Compute() => Input.Compute();
+        protected override int _Compute()
+        {
+            var len = Input.Compute();
+
+            /* Init bits to zero */
+            for (int i = 0; i < _bv.BV.Length; i++)
+            {
+                _bv.BV[i] = 0;
+            }
+
+            /* Set bits */
+            for (int i = 0; i < len; i++)
+            {
+                if (!Input.BV[i] || !_filter(Payload[i]))
+                    _bv.BV[i >> 6] |= (1L << (i & 0x3f));
+            }
+
+            /* Set residual bits */
+            for (int i = len; i < _bv.BV.Length; i++)
+            {
+                _bv.BV[i >> 6] |= (1L << (i & 0x3f));
+            }
+
+            return len;
+        }
     }
 }

@@ -8,53 +8,19 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
-    public class SelectPayloadFSubWindow<TPayload, TResult> : FSubWindowable<TResult>
-    {
-        private FSubWindowable<TPayload> _payload;
-        private Func<TPayload, TResult> _selector;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Size { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="i"></param>
-        public TResult this[int i] => _selector(_payload[i]);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="size"></param>
-        /// <param name="payload"></param>
-        /// <param name="selector"></param>
-        public SelectPayloadFSubWindow(int size, FSubWindowable<TPayload> payload, Func<TPayload, TResult> selector)
-        {
-            Size = size;
-            _payload = payload;
-            _selector = selector;
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
     public class SelectFWindow<TPayload, TResult> : UnaryFWindow<TPayload, TResult>
     {
-        private SelectPayloadFSubWindow<TPayload, TResult> _payload;
+        private Func<TPayload, TResult> _selector;
+        private FSubWindow<TResult> _payload;
+
         /// <summary>
         /// 
         /// </summary>
         public SelectFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, TResult>> selector)
             : base(input, input.Size, input.Period, input.Offset)
         {
-            _payload = new SelectPayloadFSubWindow<TPayload, TResult>(
-                Input.Payload.Size, Input.Payload, selector.Compile()
-            );
+            _selector = selector.Compile();
+            _payload = new FSubWindow<TResult>(Length);
         }
 
         /// <summary>
@@ -110,6 +76,19 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override int _Compute() => Input.Compute();
+        protected override int _Compute()
+        {
+            var len = Input.Compute();
+
+            for (int i = 0; i < len; i++)
+            {
+                if (BV[i])
+                {
+                    _payload.Data[i] = _selector(Input.Payload[i]);
+                }
+            }
+
+            return len;
+        }
     }
 }
