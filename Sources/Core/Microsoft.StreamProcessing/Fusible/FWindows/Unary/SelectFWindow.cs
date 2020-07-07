@@ -34,6 +34,8 @@ namespace Microsoft.StreamProcessing
 
             var ipayload = Input.Payload.Data;
             var ipayloadOffset = Input.Payload.Offset;
+            var opayload = Payload.Data;
+            var opayloadOffset = Payload.Offset;
             var ibvOffset = Input.BV.Offset;
 
             unsafe
@@ -47,7 +49,8 @@ namespace Microsoft.StreamProcessing
                         if ((bv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
                         {
                             var pi = ipayloadOffset + i;
-                            _Payload.Data[i] = _selector(ipayload[pi]);
+                            var po = opayloadOffset + i;
+                            opayload[po] = _selector(ipayload[pi]);
                         }
                     }
                 }

@@ -56,34 +56,38 @@ namespace Microsoft.StreamProcessing
             int olen = 0;
 
             var period = Period;
-            var payload = Input.Payload.Data;
-            var payloadOffset = Input.Payload.Offset;
-            var bvOffset = Input.BV.Offset;
-            var syncOffset = Input.Sync.Offset;
+            var ipayload = Input.Payload.Data;
+            var ipayloadOffset = Input.Payload.Offset;
+            var ibvOffset = Input.BV.Offset;
+            var isyncOffset = Input.Sync.Offset;
+            var opayload = Payload.Data;
+            var opayloadOffset = Payload.Offset;
+            var osyncOffset = Sync.Offset;
+            var ootherOffset = Other.Offset;
 
             unsafe
             {
-                fixed (long* bv = Input.BV.Data)
-                fixed (long* vsync = Input.Sync.Data)
+                fixed (long* ibv = Input.BV.Data)
+                fixed (long* ivsync = Input.Sync.Data)
                 {
                     for (int i = 0; i < ilen; i++)
                     {
                         // TODO: Flush at the end of stream
-                        var bi = bvOffset + i;
-                        if ((bv[bi >> 6] & (1L << (bi & 0x3f))) == 0)
+                        var ibi = ibvOffset + i;
+                        if ((ibv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
                         {
-                            var pi = payloadOffset + i;
-                            var si = syncOffset + i;
+                            var ipi = ipayloadOffset + i;
+                            var isi = isyncOffset + i;
 
-                            var item = payload[pi];
-                            var sync = vsync[si];
+                            var item = ipayload[ipi];
+                            var sync = ivsync[isi];
                             if (sync % period == 0)
                             {
                                 var result = _res(_state);
                                 _state = _init();
-                                _Payload.Data[olen] = result;
-                                _Sync.Data[olen] = sync;
-                                _Other.Data[olen] = sync + Period;
+                                opayload[opayloadOffset + olen] = result;
+                                _Sync.Data[osyncOffset + olen] = sync;
+                                _Other.Data[ootherOffset + olen] = sync + Period;
                                 olen++;
                             }
 
