@@ -39,17 +39,27 @@ namespace Microsoft.StreamProcessing
                 BV.Data[i] = 0;
             }
 
-            /* Set bits */
-            for (int i = 0; i < len; i++)
-            {
-                if (!Input.BV[i] || !_filter(Payload[i]))
-                    BV.Data[i >> 6] |= (1L << (i & 0x3f));
-            }
+            var payload = Payload.Data;
+            var payloadOffset = Payload.Offset;
+            var ibvOffset = Input.BV.Offset;
 
-            /* Set residual bits */
-            for (int i = len; i < BV.Data.Length; i++)
+            unsafe
             {
-                BV.Data[i >> 6] |= (1L << (i & 0x3f));
+                fixed (long* ibv = Input.BV.Data)
+                fixed (long* bv = BV.Data)
+                {
+                    for (int i = 0; i < BV.Data.Length * sizeof(long) * 8; i++)
+                    {
+                        // TODO: Flush at the end of stream
+                        var bi = ibvOffset + i;
+                        var pi = payloadOffset + i;
+
+                        if (i >= len || ((ibv[bi >> 6] & (1L << (bi & 0x3f))) != 0) || !_filter(payload[pi]))
+                        {
+                            bv[i >> 6] |= (1L << (i & 0x3f));
+                        }
+                    }
+                }
             }
 
             return len;
