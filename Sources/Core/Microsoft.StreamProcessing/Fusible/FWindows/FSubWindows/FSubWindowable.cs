@@ -8,7 +8,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public B[] Data { get; }
+        public B[] Data { get; set; }
 
         /// <summary>
         /// 
@@ -19,6 +19,16 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public int Offset { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool isInput { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool isOutput { get; set; }
 
         /// <summary>
         /// 

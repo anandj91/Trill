@@ -23,6 +23,16 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public bool isInput { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool isOutput { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="i"></param>
         public virtual bool this[int i] => ((Data[(Offset + i) >> 6] & (1L << ((Offset + i) & 0x3f))) == 0);
 
@@ -41,6 +51,9 @@ namespace Microsoft.StreamProcessing
             {
                 Data[i >> 6] |= (1L << (i & 0x3f));
             }
+
+            isInput = false;
+            isOutput = false;
         }
 
         /// <summary>

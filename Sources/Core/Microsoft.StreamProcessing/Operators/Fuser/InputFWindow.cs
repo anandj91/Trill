@@ -16,6 +16,10 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public InputFWindow(long size, long period, long offset) : base(size, period, offset)
         {
+            Payload.isInput = true;
+            Sync.isInput = true;
+            Other.isInput = true;
+            BV.isInput = true;
         }
 
         /// <summary>

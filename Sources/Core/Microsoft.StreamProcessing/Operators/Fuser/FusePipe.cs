@@ -12,6 +12,7 @@ namespace Microsoft.StreamProcessing
         private readonly MemoryPool<Empty, TResult> pool;
         private FWindowable<TResult> fwindow;
         private InputFWindow<TPayload> iwindow;
+        private OutputFWindow<TPayload, TResult> owindow;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -28,8 +29,10 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
             var iop = new FInputOperation<TPayload>(stream.Period, stream.Offset);
-            fwindow = Transform(iop).Compile(25);
+            fwindow = Transform(iop).Compile(100);
             iwindow = iop.GetInputFWindow();
+            owindow = new OutputFWindow<TPayload, TResult>(fwindow, iwindow);
+            owindow.SetBatch(this.output);
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -40,25 +43,14 @@ namespace Microsoft.StreamProcessing
         public override void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             iwindow.SetBatch(batch);
+            owindow.SetBatch(this.output);
             do
             {
-                var len = fwindow.Compute();
-                for (int i = 0; i < len; i++)
+                owindow.Compute();
+                if (this.output.Count == Config.DataBatchSize)
                 {
-                    int index = this.output.Count++;
-                    if (!fwindow.BV[i]) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
-                    this.output.vsync.col[index] = fwindow.Sync[i];
-                    this.output.vother.col[index] = fwindow.Other[i];
-                    if (fwindow.Other[i] == StreamEvent.PunctuationOtherTime)
-                    {
-                        FlushContents();
-                    }
-                    else
-                    {
-                        this.output.payload.col[index] = fwindow.Payload[i];
-                    }
-
-                    if (this.output.Count == Config.DataBatchSize) FlushContents();
+                    FlushContents();
+                    owindow.SetBatch(this.output);
                 }
             } while (iwindow.Slide());
 

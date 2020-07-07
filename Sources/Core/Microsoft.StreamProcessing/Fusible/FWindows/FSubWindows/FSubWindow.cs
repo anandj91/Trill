@@ -24,6 +24,16 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public bool isInput { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool isOutput { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="i"></param>
         public virtual T this[int i] => Data[Offset + i];
 
@@ -38,6 +48,8 @@ namespace Microsoft.StreamProcessing
             Length = length;
             Data = data;
             Offset = offset;
+            isInput = false;
+            isOutput = false;
         }
 
         /// <summary>

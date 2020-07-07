@@ -33,10 +33,13 @@ namespace Microsoft.StreamProcessing
         {
             var len = Input.Compute();
 
-            /* Init bits to zero */
-            for (int i = 0; i < BV.Data.Length; i++)
+            if (!BV.isOutput)
             {
-                BV.Data[i] = 0;
+                /* Init bits to zero */
+                for (int i = 0; i < BV.Data.Length; i++)
+                {
+                    BV.Data[i] = 0;
+                }
             }
 
             var payload = Payload.Data;
@@ -49,7 +52,7 @@ namespace Microsoft.StreamProcessing
                 fixed (long* ibv = Input.BV.Data)
                 fixed (long* bv = BV.Data)
                 {
-                    for (int i = 0; i < BV.Data.Length * sizeof(long) * 8; i++)
+                    for (int i = 0; i < BV.Length; i++)
                     {
                         // TODO: Flush at the end of stream
                         var ibi = ibvOffset + i;
