@@ -25,9 +25,9 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public override FWindowable<TPayload> Compile(int factor)
+        public override FWindowable<TPayload> Compile(int factor, bool dryRun = false)
         {
-            return new WhereFWindow<TPayload>(Input.Compile(factor), _filter);
+            return new WhereFWindow<TPayload>(Input.Compile(factor, dryRun), _filter);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public FWindowable<TResult> Compile(int i);
+        public FWindowable<TResult> Compile(int factor, bool dryRun = false);
     }
 }

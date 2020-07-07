@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         {
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(aggregate, nameof(aggregate));
-            var tmp = source.Compile(1);
+            var tmp = source.Compile(1, true);
             var p = new StreamProperties<Empty, TPayload>(
                 false, true, tmp.Period, true, period, offset, false, true, true, true,
                 EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<TPayload>.Default,
@@ -75,6 +75,25 @@ namespace Microsoft.StreamProcessing.FOperationAPI
             return new AggregateFOperation<TPayload, TAggState, TResult>(
                 source, aggregate(new Window<Empty, TPayload>(p)), window, period, offset
             );
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TResult> Multicast<TPayload, TResult>(
+            this FOperation<TPayload> source,
+            Func<FOperation<TPayload>, FOperation<TResult>> selector
+        )
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+
+            return selector(new MulticastFOperation<TPayload>(source));
         }
     }
 }

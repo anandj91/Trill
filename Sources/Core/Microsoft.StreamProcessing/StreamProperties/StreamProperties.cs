@@ -556,7 +556,7 @@ namespace Microsoft.StreamProcessing
         )
         {
             var fop = Transform(new FInputOperation<TPayload>(period, offset));
-            var fwin = fop.Compile(1);
+            var fwin = fop.Compile(1, true);
             return new StreamProperties<TKey, TResult>(
                 false, true, fwin.Period, true, fwin.Period, fwin.Offset, false, true, true, true,
                 this.KeyEqualityComparer, EqualityComparerExpression<TResult>.Default,

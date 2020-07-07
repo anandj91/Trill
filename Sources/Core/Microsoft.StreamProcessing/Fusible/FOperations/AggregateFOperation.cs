@@ -1,5 +1,3 @@
-using System;
-using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing
@@ -36,13 +34,13 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public override FWindowable<TResult> Compile(int factor)
+        public override FWindowable<TResult> Compile(int factor, bool dryRun = false)
         {
-            var tmp = Input.Compile(1);
+            var tmp = Input.Compile(1, true);
             var iperiod = tmp.Period;
             var ifactor = (int) (_window / iperiod) / tmp.Length;
             return new AggregateFWindow<TPayload, TAggState, TResult>(
-                Input.Compile(ifactor * factor), _aggregate, _window
+                Input.Compile(ifactor * factor, dryRun), _aggregate, _window
             );
         }
     }
