@@ -32,9 +32,9 @@ namespace Microsoft.StreamProcessing
         {
             var len = Input.Compute();
 
-            var payload = Input.Payload.Data;
-            var payloadOffset = Input.Payload.Offset;
-            var bvOffset = Input.BV.Offset;
+            var ipayload = Input.Payload.Data;
+            var ipayloadOffset = Input.Payload.Offset;
+            var ibvOffset = Input.BV.Offset;
 
             unsafe
             {
@@ -43,11 +43,11 @@ namespace Microsoft.StreamProcessing
                     for (int i = 0; i < len; i++)
                     {
                         // TODO: Flush at the end of stream
-                        var bi = bvOffset + i;
-                        if ((bv[bi >> 6] & (1L << (bi & 0x3f))) == 0)
+                        var ibi = ibvOffset + i;
+                        if ((bv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
                         {
-                            var pi = payloadOffset + i;
-                            _Payload.Data[i] = _selector(payload[pi]);
+                            var pi = ipayloadOffset + i;
+                            _Payload.Data[i] = _selector(ipayload[pi]);
                         }
                     }
                 }
