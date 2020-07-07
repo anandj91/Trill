@@ -8,6 +8,8 @@ namespace Microsoft.StreamProcessing
     {
         private bool _isComputed;
         private int _len;
+        private bool _hasSlid;
+        private bool _slide;
 
         /// <summary>
         /// 
@@ -17,6 +19,8 @@ namespace Microsoft.StreamProcessing
         {
             _isComputed = false;
             _len = -1;
+            _hasSlid = false;
+            _slide = false;
             _Payload = Input.Payload as FSubWindow<TPayload>;
             _Sync = Input.Sync as FSubWindow<long>;
             _Other = Input.Other as FSubWindow<long>;
@@ -33,6 +37,8 @@ namespace Microsoft.StreamProcessing
             {
                 _len = Input.Compute();
                 _isComputed = true;
+                _hasSlid = false;
+                _slide = false;
             }
 
             return _len;
@@ -44,9 +50,15 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override bool _Slide()
         {
-            _isComputed = false;
-            _len = -1;
-            return Input.Slide();
+            if (!_hasSlid)
+            {
+                _slide = Input.Slide();
+                _hasSlid = true;
+                _isComputed = false;
+                _len = -1;
+            }
+
+            return _slide;
         }
     }
 }
