@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing
         private readonly MemoryPool<Empty, TResult> pool;
         private FWindowable<TResult> fwindow;
         private InputFWindow<TPayload> iwindow;
-        private OutputFWindow<TPayload, TResult> owindow;
+        private OutputFWindow<TResult> owindow;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -29,9 +29,9 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
             var iop = new FInputOperation<TPayload>(stream.Period, stream.Offset);
-            fwindow = Transform(iop).Compile(100);
+            fwindow = Transform(iop).Compile(10);
             iwindow = iop.GetInputFWindow();
-            owindow = new OutputFWindow<TPayload, TResult>(fwindow, iwindow);
+            owindow = new OutputFWindow<TResult>(fwindow);
             owindow.SetBatch(this.output);
         }
 
@@ -52,7 +52,7 @@ namespace Microsoft.StreamProcessing
                     FlushContents();
                     owindow.SetBatch(this.output);
                 }
-            } while (iwindow.Slide());
+            } while (owindow.Slide());
 
             batch.Release();
             batch.Return();

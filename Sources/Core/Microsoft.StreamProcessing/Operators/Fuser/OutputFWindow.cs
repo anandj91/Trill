@@ -5,29 +5,18 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// 
     /// </summary>
-    public class OutputFWindow<TPayload, TResult> : UnaryFWindow<TResult, TResult>
+    public class OutputFWindow<TResult> : UnaryFWindow<TResult, TResult>
     {
         private StreamMessage<Empty, TResult> _obatch;
-        private bool _dirPayload;
-        private bool _dirSync;
-        private bool _dirOther;
-        private bool _dirBV;
 
         /// <summary>
         /// 
         /// </summary>
-        public OutputFWindow(FWindowable<TResult> fwindow, FWindowable<TPayload> iwindow)
-            : base(fwindow, fwindow.Size, fwindow.Period, fwindow.Offset)
+        public OutputFWindow(FWindowable<TResult> fwindow) : base(fwindow, fwindow.Size, fwindow.Period, fwindow.Offset)
         {
-            _dirPayload = ((typeof(TPayload) == typeof(TResult)
-                            && (iwindow.Payload.Data as TResult[] == fwindow.Payload.Data)));
-            _dirSync = (iwindow.Sync.Data == fwindow.Sync.Data);
-            _dirOther = (iwindow.Other.Data == fwindow.Other.Data);
-            _dirBV = (iwindow.BV.Data == fwindow.BV.Data);
         }
 
-        private static void UpdateSubWindows<B, T>(FSubWindowable<B, T> fsubwin, ColumnBatch<B> output, int offset
-        )
+        private static void UpdateSubWindows<B, T>(FSubWindowable<B, T> fsubwin, ColumnBatch<B> output, int offset)
         {
             if (fsubwin.isInput)
             {
@@ -61,11 +50,20 @@ namespace Microsoft.StreamProcessing
         {
             var len = Input.Compute();
             _obatch.Count += len;
+            return len;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _Slide()
+        {
             if (Input.Payload.isOutput) Input.Payload.Offset = _obatch.Count;
             if (Input.Sync.isOutput) Input.Sync.Offset = _obatch.Count;
             if (Input.Other.isOutput) Input.Other.Offset = _obatch.Count;
             if (Input.BV.isOutput) Input.BV.Offset = _obatch.Count;
-            return len;
+            return Input.Slide();
         }
     }
 }

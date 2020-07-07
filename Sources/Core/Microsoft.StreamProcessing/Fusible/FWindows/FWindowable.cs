@@ -56,5 +56,11 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public int Compute();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Slide();
     }
 }

@@ -106,5 +106,17 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         protected abstract int _Compute();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Slide() => _Slide();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected abstract bool _Slide();
     }
 }

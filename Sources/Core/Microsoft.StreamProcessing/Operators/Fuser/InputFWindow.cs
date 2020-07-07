@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Slide()
+        protected override bool _Slide()
         {
             //TODO: Need to deal with gaps
             Idx += Length;

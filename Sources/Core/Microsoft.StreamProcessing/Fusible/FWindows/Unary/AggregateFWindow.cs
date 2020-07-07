@@ -99,5 +99,11 @@ namespace Microsoft.StreamProcessing
 
             return olen;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _Slide() => Input.Slide();
     }
 }
