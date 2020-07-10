@@ -95,5 +95,27 @@ namespace Microsoft.StreamProcessing.FOperationAPI
 
             return selector(new MulticastFOperation<TPayload>(source));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="joiner"></param>
+        /// <typeparam name="TLeft"></typeparam>
+        /// <typeparam name="TRight"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TResult> Join<TLeft, TRight, TResult>(
+            this FOperation<TLeft> left,
+            FOperation<TRight> right,
+            Expression<Func<TLeft, TRight, TResult>> joiner
+        )
+        {
+            Invariant.IsNotNull(left, nameof(left));
+            Invariant.IsNotNull(right, nameof(right));
+
+            return new JoinFOperation<TLeft, TRight, TResult>(left, right, joiner);
+        }
     }
 }
