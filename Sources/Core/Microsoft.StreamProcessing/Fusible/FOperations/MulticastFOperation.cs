@@ -8,6 +8,8 @@ namespace Microsoft.StreamProcessing
     {
         private MulticastFWindow<TPayload> _iwindow;
         private bool _isCompiled;
+        private long _offset;
+        private long _size;
 
         /// <summary>
         /// 
@@ -21,25 +23,44 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="factor"></param>
-        /// <param name="dryRun"></param>
-        /// <returns></returns>
-        public override FWindowable<TPayload> Compile(int factor, bool dryRun = false)
+        public override long Size
         {
-            if (dryRun)
-            {
-                return new MulticastFWindow<TPayload>(Input.Compile(factor, true));
-            }
-            else
-            {
-                if (!_isCompiled)
-                {
-                    _iwindow = new MulticastFWindow<TPayload>(Input.Compile(factor, false));
-                    _isCompiled = true;
-                }
+            get { return Input.Size; }
+        }
 
-                return _iwindow;
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Period
+        {
+            get { return Input.Period; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Offset
+        {
+            get { return Input.Offset; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override FWindowable<TPayload> Compile(long offset, long size)
+        {
+            if (!_isCompiled)
+            {
+                _iwindow = new MulticastFWindow<TPayload>(Input.Compile(offset, size));
+                _isCompiled = true;
+                _offset = offset;
+                _size = size;
             }
+
+            Invariant.IsTrue(offset == _offset, "Multicast offsets should be same");
+            Invariant.IsTrue(size == _size, "Multicast sizes should be same");
+            return _iwindow;
         }
     }
 }

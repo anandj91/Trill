@@ -13,6 +13,7 @@ namespace Microsoft.StreamProcessing
         private FWindowable<TResult> fwindow;
         private InputFWindow<TPayload> iwindow;
         private OutputFWindow<TResult> owindow;
+        private long syncTime;
 
         [DataMember] private StreamMessage<Empty, TResult> output;
 
@@ -29,10 +30,12 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
             var iop = new FInputOperation<TPayload>(stream.Period, stream.Offset);
-            fwindow = Transform(iop).Compile(10);
+            var fop = Transform(iop);
+            fwindow = fop.Compile(0, fop.Size * 10);
             iwindow = iop.GetInputFWindow();
             owindow = new OutputFWindow<TResult>(fwindow);
             owindow.SetBatch(this.output);
+            syncTime = StreamEvent.MinSyncTime;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -52,11 +55,12 @@ namespace Microsoft.StreamProcessing
                     FlushContents();
                     owindow.SetBatch(this.output);
                 }
-            } while (owindow.Slide());
+
+                syncTime = owindow.SyncTime + owindow.Size;
+            } while (owindow.Slide(syncTime));
 
             batch.Release();
             batch.Return();
-            FlushContents();
         }
 
         protected override void FlushContents()

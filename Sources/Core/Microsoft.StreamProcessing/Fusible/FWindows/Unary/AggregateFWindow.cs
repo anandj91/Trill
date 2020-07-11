@@ -1,5 +1,4 @@
 using System;
-using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing
@@ -81,7 +80,8 @@ namespace Microsoft.StreamProcessing
 
                             var item = ipayload[ipi];
                             var sync = ivsync[isi];
-                            if (sync % period == 0)
+                            _state = _acc(_state, sync, item);
+                            if (sync % period == 0 || sync == StreamEvent.MaxSyncTime)
                             {
                                 var result = _res(_state);
                                 _state = _init();
@@ -90,8 +90,6 @@ namespace Microsoft.StreamProcessing
                                 _Other.Data[ootherOffset + olen] = sync + Period;
                                 olen++;
                             }
-
-                            _state = _acc(_state, sync, item);
                         }
                     }
                 }
@@ -104,6 +102,6 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide() => Input.Slide();
+        protected override bool _Slide(long tsync) => Input.Slide(tsync);
     }
 }

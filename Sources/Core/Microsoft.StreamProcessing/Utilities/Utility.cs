@@ -183,6 +183,31 @@ namespace Microsoft.StreamProcessing
 
             throw new InvalidOperationException("Only primitive types supported, unknown structural type " + type.FullName);
         }
+
+        public static long LCM(long a, long b)
+        {
+            long num1, num2;
+            if (a > b)
+            {
+                num1 = a;
+                num2 = b;
+            }
+            else
+            {
+                num1 = b;
+                num2 = a;
+            }
+
+            for (int i = 1; i < num2; i++)
+            {
+                if ((num1 * i) % num2 == 0)
+                {
+                    return i * num1;
+                }
+            }
+
+            return num1 * num2;
+        }
     }
 
     internal static class Invariant

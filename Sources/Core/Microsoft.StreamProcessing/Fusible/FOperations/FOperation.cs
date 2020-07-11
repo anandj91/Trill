@@ -8,7 +8,22 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public long Size { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Period { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Offset { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
-        public FWindowable<TResult> Compile(int factor, bool dryRun = false);
+        public FWindowable<TResult> Compile(long offset, long size);
     }
 }

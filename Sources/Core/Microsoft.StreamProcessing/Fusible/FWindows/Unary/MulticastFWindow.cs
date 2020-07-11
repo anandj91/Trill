@@ -48,11 +48,11 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide()
+        protected override bool _Slide(long tsync)
         {
             if (!_hasSlid)
             {
-                _slide = Input.Slide();
+                _slide = Input.Slide(tsync);
                 _hasSlid = true;
                 _isComputed = false;
                 _len = -1;

@@ -63,6 +63,6 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide() => Input.Slide();
+        protected override bool _Slide(long tsync) => Input.Slide(tsync);
     }
 }

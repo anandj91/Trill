@@ -29,6 +29,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public long SyncTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Size { get; }
 
         /// <summary>
@@ -54,10 +59,11 @@ namespace Microsoft.StreamProcessing
         /// <param name="offset"></param>
         public FWindow(long size, long period, long offset)
         {
+            SyncTime = StreamEvent.MinSyncTime;
             Size = size;
             Period = period;
             Offset = offset;
-            Length = (int) (Size / period);
+            Length = (int) (Size / Period);
             _Payload = new FSubWindow<TPayload>(Length);
             _Sync = new FSubWindow<long>(Length);
             _Other = new FSubWindow<long>(Length);
@@ -111,12 +117,21 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Slide() => _Slide();
+        public bool Slide(long tsync)
+        {
+            if (_Slide(tsync))
+            {
+                SyncTime = tsync;
+                return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        protected abstract bool _Slide();
+        protected abstract bool _Slide(long tsync);
     }
 }

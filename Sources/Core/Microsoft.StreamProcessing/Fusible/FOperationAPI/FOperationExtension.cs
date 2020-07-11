@@ -66,9 +66,8 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         {
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(aggregate, nameof(aggregate));
-            var tmp = source.Compile(1, true);
             var p = new StreamProperties<Empty, TPayload>(
-                false, true, tmp.Period, true, period, offset, false, true, true, true,
+                false, true, source.Period, true, period, offset, false, true, true, true,
                 EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<TPayload>.Default,
                 ComparerExpression<Empty>.Default, ComparerExpression<TPayload>.Default, null, null, null
             );

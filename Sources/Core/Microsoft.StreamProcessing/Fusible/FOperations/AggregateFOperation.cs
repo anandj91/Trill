@@ -24,6 +24,7 @@ namespace Microsoft.StreamProcessing
             long window, long period, long offset
         ) : base(input)
         {
+            Invariant.IsTrue(window == period, "Window must be equal to period");
             _aggregate = aggregate;
             _window = window;
             _period = period;
@@ -33,15 +34,34 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public override FWindowable<TResult> Compile(int factor, bool dryRun = false)
+        public override long Size
         {
-            var tmp = Input.Compile(1, true);
-            var iperiod = tmp.Period;
-            var ifactor = (int) (_window / iperiod) / tmp.Length;
-            return new AggregateFWindow<TPayload, TAggState, TResult>(
-                Input.Compile(ifactor * factor, dryRun), _aggregate, _window
-            );
+            get { return Utility.LCM(Input.Size, _window); }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Period
+        {
+            get { return _period; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Offset
+        {
+            get { return _offset; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override FWindowable<TResult> Compile(long offset, long size)
+        {
+            return new AggregateFWindow<TPayload, TAggState, TResult>(Input.Compile(offset, size), _aggregate, _window);
         }
     }
 }

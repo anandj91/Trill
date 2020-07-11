@@ -22,15 +22,35 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public FWindowable<TPayload> Compile(int factor, bool dryRun = false)
+        public long Size
         {
-            var inp = new InputFWindow<TPayload>(factor * _period, _period, _offset);
-            if (!dryRun)
-            {
-                _input = inp;
-            }
-            return inp;
+            get { return 1; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Period
+        {
+            get { return _period; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Offset
+        {
+            get { return _offset; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public FWindowable<TPayload> Compile(long offset, long size)
+        {
+            _input = new InputFWindow<TPayload>(size, Period, Offset);
+            return _input;
         }
 
         /// <summary>

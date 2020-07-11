@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -8,6 +5,11 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     public interface FWindowable<TPayload>
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public long SyncTime { get; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -61,6 +63,6 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Slide();
+        public bool Slide(long tsync);
     }
 }

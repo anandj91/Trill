@@ -106,6 +106,6 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide() => Left.Slide() && Right.Slide();
+        protected override bool _Slide(long tsync) => Left.Slide(tsync) && Right.Slide(tsync);
     }
 }

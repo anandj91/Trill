@@ -32,9 +32,22 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="factor"></param>
-        /// <param name="dryRun"></param>
+        public abstract long Size { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public abstract long Period { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public abstract long Offset { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
-        public abstract FWindowable<TResult> Compile(int factor, bool dryRun = false);
+        public abstract FWindowable<TResult> Compile(long offset, long size);
     }
 }

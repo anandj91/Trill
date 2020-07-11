@@ -29,20 +29,39 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="factor"></param>
-        /// <param name="dryRun"></param>
-        /// <returns></returns>
-        public override FWindowable<TResult> Compile(int factor, bool dryRun = false)
+        public override long Size
         {
-            var lwin = Left.Compile(1, true);
-            var rwin = Right.Compile(1, true);
-            Invariant.IsTrue(rwin.Period % lwin.Period == 0, "Right period must be a multiple of left period");
+            get { return Utility.LCM(Left.Size, Right.Size); }
+        }
 
-            return new JoinFWindow<TLeft, TRight, TResult>(
-                Left.Compile((int) (factor * rwin.Size / lwin.Size), dryRun),
-                Right.Compile(factor, dryRun),
-                _joiner
-            );
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Period
+        {
+            get { return Left.Period; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Offset
+        {
+            get { return Left.Offset; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override FWindowable<TResult> Compile(long offset, long size)
+        {
+            var lwin = Left.Compile(offset, size);
+            var rwin = Right.Compile(offset, size);
+            Invariant.IsTrue(rwin.Period % lwin.Period == 0, "Right period must be a multiple of left period");
+            Invariant.IsTrue(rwin.Offset == lwin.Offset, "Right offset must be equal to left offset");
+
+            return new JoinFWindow<TLeft, TRight, TResult>(lwin, rwin, _joiner);
         }
     }
 }

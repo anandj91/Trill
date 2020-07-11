@@ -22,14 +22,19 @@ namespace Microsoft.StreamProcessing
             BV.isInput = true;
         }
 
+        private int NextIdx(long tsync)
+        {
+            return Idx + Length;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide()
+        protected override bool _Slide(long tsync)
         {
             //TODO: Need to deal with gaps
-            Idx += Length;
+            Idx = NextIdx(tsync);
             Payload.Offset = Idx;
             Sync.Offset = Idx;
             Other.Offset = Idx;
@@ -58,6 +63,7 @@ namespace Microsoft.StreamProcessing
             _Other.Offset = 0;
             _BV.Data = batch.bitvector.col;
             _BV.Offset = 0;
+            SyncTime = _Sync.Data[_Sync.Offset + Idx];
         }
     }
 }

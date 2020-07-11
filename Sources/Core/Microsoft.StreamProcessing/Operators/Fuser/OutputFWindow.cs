@@ -57,13 +57,13 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide()
+        protected override bool _Slide(long tsync)
         {
             if (Input.Payload.isOutput) Input.Payload.Offset = _obatch.Count;
             if (Input.Sync.isOutput) Input.Sync.Offset = _obatch.Count;
             if (Input.Other.isOutput) Input.Other.Offset = _obatch.Count;
             if (Input.BV.isOutput) Input.BV.Offset = _obatch.Count;
-            return Input.Slide();
+            return Input.Slide(tsync);
         }
     }
 }

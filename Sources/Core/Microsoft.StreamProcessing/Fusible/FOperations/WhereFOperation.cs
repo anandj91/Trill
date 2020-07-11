@@ -24,10 +24,34 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public override FWindowable<TPayload> Compile(int factor, bool dryRun = false)
+        public override long Size
         {
-            return new WhereFWindow<TPayload>(Input.Compile(factor, dryRun), _filter);
+            get { return Input.Size; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Period
+        {
+            get { return Input.Period; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long Offset
+        {
+            get { return Input.Offset; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override FWindowable<TPayload> Compile(long offset, long size)
+        {
+            return new WhereFWindow<TPayload>(Input.Compile(offset, size), _filter);
         }
     }
 }
