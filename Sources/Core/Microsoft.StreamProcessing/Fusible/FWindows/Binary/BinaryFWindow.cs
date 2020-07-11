@@ -1,3 +1,5 @@
+using System;
+
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -31,6 +33,14 @@ namespace Microsoft.StreamProcessing
         {
             Left = left;
             Right = right;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long SyncTime
+        {
+            get { return Math.Min(Left.SyncTime, Right.SyncTime); }
         }
     }
 }

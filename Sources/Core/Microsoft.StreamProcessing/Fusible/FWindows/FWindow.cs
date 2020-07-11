@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public long SyncTime { get; set; }
+        public virtual long SyncTime { get; }
 
         /// <summary>
         /// 
@@ -117,16 +117,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Slide(long tsync)
-        {
-            if (_Slide(tsync))
-            {
-                SyncTime = tsync;
-                return true;
-            }
-
-            return false;
-        }
+        public bool Slide(long tsync) => _Slide(tsync);
 
         /// <summary>
         /// 

@@ -18,5 +18,19 @@ namespace Microsoft.StreamProcessing
         {
             Input = input;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long SyncTime
+        {
+            get { return Input.SyncTime; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _Slide(long tsync) => Input.Slide(tsync);
     }
 }

@@ -10,6 +10,7 @@ namespace Microsoft.StreamProcessing
     {
         private int Idx;
         private int Count;
+        private long _syncTime;
 
         /// <summary>
         /// 
@@ -20,11 +21,31 @@ namespace Microsoft.StreamProcessing
             Sync.isInput = true;
             Other.isInput = true;
             BV.isInput = true;
+            _syncTime = StreamEvent.MinSyncTime;
         }
 
-        private int NextIdx(long tsync)
+        /// <summary>
+        /// 
+        /// </summary>
+        public override long SyncTime
         {
-            return Idx + Length;
+            get { return _syncTime; }
+        }
+
+        private int NextShift(long tsync)
+        {
+            int len = (int) Math.Min((tsync - Sync[0]) / Period, Count - Idx);
+            int s = 0;
+            while (len > 0 && Sync[s + len - 1] > tsync)
+            {
+                len /= 2;
+                if (Sync[s + len - 1] < tsync)
+                {
+                    s += len;
+                }
+            }
+
+            return s + len;
         }
 
         /// <summary>
@@ -33,19 +54,36 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override bool _Slide(long tsync)
         {
-            //TODO: Need to deal with gaps
-            Idx = NextIdx(tsync);
+            if (tsync < SyncTime)
+            {
+                throw new Exception("Sliding to an already synced time");
+            }
+
+            var shift = NextShift(tsync + Period);
+            if (Idx + shift >= Count)
+            {
+                return false;
+            }
+
+            Idx += shift;
             Payload.Offset = Idx;
             Sync.Offset = Idx;
             Other.Offset = Idx;
             BV.Offset = Idx;
-            return Idx < Count;
+            _syncTime = Sync[0];
+            return SyncTime < StreamEvent.InfinitySyncTime;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        protected override int _Compute() => Math.Min(Length, Count - Idx);
+        protected override int _Compute()
+        {
+            var len = NextShift(SyncTime + Size);
+            // TODO: Deal with gaps
+            _syncTime = Sync[len - 1];
+            return Math.Min(len, Count - Idx);
+        }
 
         /// <summary>
         /// 
@@ -63,7 +101,7 @@ namespace Microsoft.StreamProcessing
             _Other.Offset = 0;
             _BV.Data = batch.bitvector.col;
             _BV.Offset = 0;
-            SyncTime = _Sync.Data[_Sync.Offset + Idx];
+            _syncTime = Sync[0];
         }
     }
 }

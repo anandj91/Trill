@@ -52,7 +52,6 @@ namespace Microsoft.StreamProcessing
             {
                 f = llen / rlen;
             }
-            
 
             var lpayload = Left.Payload.Data;
             var lpayloadOffset = Left.Payload.Offset;
