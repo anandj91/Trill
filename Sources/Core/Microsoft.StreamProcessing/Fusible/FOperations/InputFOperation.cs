@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public long Size
         {
-            get { return 1; }
+            get { return Period; }
         }
 
         /// <summary>
