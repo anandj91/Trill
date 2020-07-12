@@ -43,54 +43,46 @@ namespace Microsoft.StreamProcessing
         {
             var llen = Left.Compute();
             var rlen = Right.Compute();
-            int f;
-            if (llen == 0 || rlen == 0)
-            {
-                f = 0;
-            }
-            else
-            {
-                f = llen / rlen;
-            }
+            int f = (int) (Right.Period / Left.Period);
 
             var lpayload = Left.Payload.Data;
             var lpayloadOffset = Left.Payload.Offset;
             var rpayload = Right.Payload.Data;
             var rpayloadOffset = Right.Payload.Offset;
-            var opayload = Payload.Data;
-            var opayloadOffset = Payload.Offset;
+            var payload = Payload.Data;
+            var payloadOffset = Payload.Offset;
 
             var lbvOffset = Left.BV.Offset;
             var rbvOffset = Right.BV.Offset;
-            var obvOffset = BV.Offset;
+            var bvOffset = BV.Offset;
 
             unsafe
             {
                 fixed (long* lbv = Left.BV.Data)
                 fixed (long* rbv = Right.BV.Data)
-                fixed (long* obv = BV.Data)
+                fixed (long* bv = BV.Data)
                 {
                     for (int r = 0; r < rlen; r++)
                     {
                         var rbi = rbvOffset + r;
-                        if ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0)
+                        //if ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0)
                         {
                             for (int l = r * f; l < (r + 1) * f; l++)
                             {
                                 var lbi = lbvOffset + l;
-                                var obi = obvOffset + l;
+                                var bi = bvOffset + l;
                                 if (((lbv[lbi >> 6] & (1L << (lbi & 0x3f))) == 0)
                                     && ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0))
                                 {
                                     var lp = lpayload[lpayloadOffset + l];
                                     var rp = rpayload[rpayloadOffset + r];
-                                    var po = opayloadOffset + l;
-                                    opayload[po] = _joiner(lp, rp);
-                                    obv[obi >> 6] &= ~(1L << (obi & 0x3f));
+                                    var po = payloadOffset + l;
+                                    payload[po] = _joiner(lp, rp);
+                                    bv[bi >> 6] &= ~(1L << (bi & 0x3f));
                                 }
                                 else
                                 {
-                                    obv[obi >> 6] |= (1L << (obi & 0x3f));
+                                    bv[bi >> 6] |= (1L << (bi & 0x3f));
                                 }
                             }
                         }
