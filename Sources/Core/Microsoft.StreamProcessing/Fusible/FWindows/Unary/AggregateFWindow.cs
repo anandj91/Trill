@@ -19,6 +19,7 @@ namespace Microsoft.StreamProcessing
         private Func<TAggState, long, TPayload, TAggState> _deacc;
         private Func<TAggState, TAggState, TAggState> _diff;
         private TAggState _state;
+        private long _prevSync;
 
         /// <summary>
         /// 
@@ -43,6 +44,7 @@ namespace Microsoft.StreamProcessing
             _state = _init();
             // TODO: Need to handle gaps. Currently BV is always true.
             _BV = new BVFSubWindow(Length);
+            _prevSync = -1;
         }
 
         /// <summary>
@@ -58,7 +60,7 @@ namespace Microsoft.StreamProcessing
             var ipayload = Input.Payload.Data;
             var ipayloadOffset = Input.Payload.Offset;
             var ibvOffset = Input.BV.Offset;
-            var iotherOffset = Input.Other.Offset;
+            var isyncOffset = Input.Sync.Offset;
             var payload = Payload.Data;
             var payloadOffset = Payload.Offset;
             var syncOffset = Sync.Offset;
@@ -67,7 +69,7 @@ namespace Microsoft.StreamProcessing
             unsafe
             {
                 fixed (long* ibv = Input.BV.Data)
-                fixed (long* ivother = Input.Other.Data)
+                fixed (long* ivsync = Input.Sync.Data)
                 {
                     for (int i = 0; i < ilen; i++)
                     {
@@ -76,20 +78,25 @@ namespace Microsoft.StreamProcessing
                         if ((ibv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
                         {
                             var ipi = ipayloadOffset + i;
-                            var isi = iotherOffset + i;
+                            var isi = isyncOffset + i;
 
                             var item = ipayload[ipi];
-                            var other = ivother[isi];
-                            _state = _acc(_state, other, item);
-                            if (other % period == 0)
+                            var sync = ivsync[isi];
+                            if (_prevSync < 0)
+                            {
+                                _prevSync = sync;
+                            }
+                            if (_prevSync / period < sync / period)
                             {
                                 var result = _res(_state);
                                 _state = _init();
                                 payload[payloadOffset + olen] = result;
-                                _Sync.Data[syncOffset + olen] = other - period;
-                                _Other.Data[otherOffset + olen] = other;
+                                _Sync.Data[syncOffset + olen] = (_prevSync / period) * period;
+                                _Other.Data[otherOffset + olen] = (_prevSync / period + 1) * period;
                                 olen++;
+                                _prevSync = sync;
                             }
+                            _state = _acc(_state, sync, item);
                         }
                     }
                 }
