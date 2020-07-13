@@ -3172,11 +3172,16 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
-            if (this.currentBatch.Count == Config.DataBatchSize)
+            bool ret = this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
+            if (!ret || this.currentBatch.Count == Config.DataBatchSize)
             {
                 if (this.flushPolicy == FlushPolicy.FlushOnBatchBoundary) OnFlush();
                 else FlushContents();
+            }
+
+            if (!ret && !this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload))
+            {
+                throw new Exception("Batch add failed again???");
             }
 
             UpdateCurrentTime(value.SyncTime);
@@ -3205,6 +3210,8 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lastPunctuationTime) return;
 
+            if (syncTime != StreamEvent.InfinitySyncTime) throw new Exception("Turn off punctuation");
+
             // Update the Punctuation to be at least the currentTime, so the Punctuation
             // is not before the preceding data event.
             syncTime = Math.Max(syncTime, this.currentTime);
@@ -3217,14 +3224,14 @@ namespace Microsoft.StreamProcessing
                 this.lastPunctuationTime);
 
             // Add Punctuation to batch
-            var count = this.currentBatch.Count;
-            this.currentBatch.vsync.col[count] = syncTime;
-            this.currentBatch.vother.col[count] = StreamEvent.PunctuationOtherTime;
-            this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-            this.currentBatch.key.col[count] = default;
-            this.currentBatch[count] = default;
-            this.currentBatch.hash.col[count] = 0;
-            this.currentBatch.Count = count + 1;
+            if (!this.currentBatch.AddPunctuation(syncTime))
+            {
+                FlushContents();
+                if (!this.currentBatch.AddPunctuation(syncTime))
+                {
+                    throw new Exception("Batch punctuation failed again???");
+                }
+            }
 
             // Flush if necessary
             if (this.flushPolicy == FlushPolicy.FlushOnPunctuation ||

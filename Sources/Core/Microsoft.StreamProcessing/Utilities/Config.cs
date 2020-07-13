@@ -45,6 +45,7 @@ namespace Microsoft.StreamProcessing
         private static bool clearColumnsOnReturn = false;
         private static bool disableMemoryPooling = false;
         private static int dataBatchSize = 80000;
+        private static int dataGranularity = 1;
         private static bool useMultiString = false;
         private static SortingTechnique ingressSortingTechnique = SortingTechnique.ImpatienceSort;
         private static CodegenOptions.MultiStringFlags useMultiStringTransforms = CodegenOptions.MultiStringFlags.None;
@@ -197,6 +198,22 @@ namespace Microsoft.StreamProcessing
 
                 TraceConfigChanges("DataBatchSize", dataBatchSize, value);
                 dataBatchSize = value;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static int DataGranularity
+        {
+            get => dataGranularity;
+            set
+            {
+                // Needs to be non-zero
+                Contract.Requires(value > 0 && value <= dataBatchSize);
+
+                TraceConfigChanges("DataGranularity", dataGranularity, value);
+                dataGranularity = value;
             }
         }
 
