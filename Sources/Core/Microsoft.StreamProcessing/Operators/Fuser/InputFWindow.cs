@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
             Sync.isInput = true;
             Other.isInput = true;
             BV.isInput = true;
-            _syncTime = StreamEvent.MinSyncTime;
+            _syncTime = -1;
         }
 
         /// <summary>
@@ -34,6 +34,8 @@ namespace Microsoft.StreamProcessing
 
         private int NextShift(long tsync)
         {
+            if (Sync[0] == StreamEvent.InfinitySyncTime) return 1;
+
             int len = (int) Math.Min((tsync - Sync[0]) / Period, Count - Idx);
             int s = 0;
             while (len > 0 && Sync[s + len - 1] > tsync)
@@ -45,6 +47,11 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
+            if (len < 0)
+            {
+                len = 0;
+            }
+
             return s + len;
         }
 
@@ -54,12 +61,8 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override bool _Slide(long tsync)
         {
-            if (tsync < SyncTime)
-            {
-                throw new Exception("Sliding to an already synced time");
-            }
-
-            var shift = NextShift(tsync + Period);
+            tsync = Math.Max((tsync / Size) * Size, _syncTime);
+            var shift = NextShift(tsync);
             if (Idx + shift >= Count)
             {
                 return false;
@@ -70,7 +73,7 @@ namespace Microsoft.StreamProcessing
             Sync.Offset = Idx;
             Other.Offset = Idx;
             BV.Offset = Idx;
-            _syncTime = Sync[0];
+            _syncTime = Sync.Data[Idx];
             return SyncTime < StreamEvent.InfinitySyncTime;
         }
 
@@ -79,10 +82,9 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         protected override int _Compute()
         {
-            var len = NextShift(SyncTime + Size);
-            // TODO: Deal with gaps
-            _syncTime = Sync[len - 1];
-            return Math.Min(len, Count - Idx);
+            var len = Math.Min(Length, Count - Idx);
+            _syncTime += len * Period;
+            return len;
         }
 
         /// <summary>
@@ -101,7 +103,6 @@ namespace Microsoft.StreamProcessing
             _Other.Offset = 0;
             _BV.Data = batch.bitvector.col;
             _BV.Offset = 0;
-            _syncTime = Sync[0];
         }
     }
 }

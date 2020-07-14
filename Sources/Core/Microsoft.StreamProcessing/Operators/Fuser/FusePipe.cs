@@ -46,15 +46,16 @@ namespace Microsoft.StreamProcessing
             iwindow.SetBatch(batch);
             owindow.SetBatch(this.output);
 
-            do
+            int len = 0;
+            while (owindow.Slide(owindow.SyncTime))
             {
-                var len = owindow.Compute();
-                if (this.output.Count == Config.DataBatchSize)
+                len = owindow.Compute();
+                if (this.output.Count >= Config.DataBatchSize - owindow.Length)
                 {
                     FlushContents();
                     owindow.SetBatch(this.output);
                 }
-            } while (owindow.Slide(owindow.SyncTime));
+            }
 
             batch.Release();
             batch.Return();
