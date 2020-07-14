@@ -28,8 +28,10 @@ namespace Microsoft.StreamProcessing
         /// <param name="period"></param>
         /// <param name="offset"></param>
         /// <param name="left"></param>
-        public BinaryFWindow(FWindowable<TLeft> left, FWindowable<TRight> right, long size, long period, long offset)
-            : base(size, period, offset)
+        /// <param name="duration"></param>
+        public BinaryFWindow(FWindowable<TLeft> left, FWindowable<TRight> right,
+            long size, long period, long offset, long duration)
+            : base(size, period, offset, duration)
         {
             Left = left;
             Right = right;

@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
             FWindowable<TPayload> input,
             IAggregate<TPayload, TAggState, TResult> aggregate,
             long window
-        ) : base(input, input.Size, window, input.Offset)
+        ) : base(input, input.Size, window, input.Offset, window)
         {
             Invariant.IsTrue(input.Size % window == 0, "Input size need to be a multiple of window");
             _window = window;

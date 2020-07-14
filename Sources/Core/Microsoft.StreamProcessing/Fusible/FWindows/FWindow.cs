@@ -34,6 +34,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public long Duration { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Size { get; }
 
         /// <summary>
@@ -57,9 +62,11 @@ namespace Microsoft.StreamProcessing
         /// <param name="size"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public FWindow(long size, long period, long offset)
+        /// <param name="duration"></param>
+        public FWindow(long size, long period, long offset, long duration)
         {
             SyncTime = StreamEvent.MinSyncTime;
+            Duration = duration;
             Size = size;
             Period = period;
             Offset = offset;

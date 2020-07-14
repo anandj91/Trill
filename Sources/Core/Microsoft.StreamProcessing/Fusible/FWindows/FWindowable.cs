@@ -13,6 +13,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public long Duration { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Size { get; }
 
         /// <summary>

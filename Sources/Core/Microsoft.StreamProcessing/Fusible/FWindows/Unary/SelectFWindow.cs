@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public SelectFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, TResult>> selector)
-            : base(input, input.Size, input.Period, input.Offset)
+            : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
             _selector = selector.Compile();
             _Payload = new FSubWindow<TResult>(Length);

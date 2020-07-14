@@ -15,7 +15,8 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <param name="input"></param>
-        public MulticastFWindow(FWindowable<TPayload> input) : base(input, input.Size, input.Period, input.Offset)
+        public MulticastFWindow(FWindowable<TPayload> input)
+            : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
             _isComputed = false;
             _len = -1;

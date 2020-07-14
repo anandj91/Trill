@@ -13,8 +13,8 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public UnaryFWindow(FWindowable<TPayload> input, long size, long period, long offset)
-            : base(size, period, offset)
+        public UnaryFWindow(FWindowable<TPayload> input, long size, long period, long offset, long duration)
+            : base(size, period, offset, duration)
         {
             Input = input;
         }

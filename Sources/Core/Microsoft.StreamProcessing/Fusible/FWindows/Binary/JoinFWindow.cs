@@ -21,11 +21,13 @@ namespace Microsoft.StreamProcessing
         /// <param name="joiner"></param>
         public JoinFWindow(FWindowable<TLeft> left, FWindowable<TRight> right,
             Expression<Func<TLeft, TRight, TResult>> joiner
-        ) : base(left, right, left.Size, left.Period, left.Offset)
+        ) : base(left, right, left.Size, left.Period, left.Offset, left.Duration)
         {
             Invariant.IsTrue(right.Offset == left.Offset, "Left offset must match to right offset");
             Invariant.IsTrue(right.Period % left.Period == 0, "Right period must be a multiple of left period");
             Invariant.IsTrue(right.Size == left.Size, "Left size must match to right size");
+            Invariant.IsTrue(right.Period == right.Duration, "Right: period and duration must be same");
+            Invariant.IsTrue(left.Period == left.Duration, "Left: period and duration must be same");
 
             _joiner = joiner.Compile();
 
@@ -41,11 +43,6 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override int _Compute()
         {
-            if (!BV.isOutput)
-            {
-                _BV.Reset();
-            }
-
             var llen = Left.Compute();
             var rlen = Right.Compute();
             int factor = Left.Length / Right.Length;

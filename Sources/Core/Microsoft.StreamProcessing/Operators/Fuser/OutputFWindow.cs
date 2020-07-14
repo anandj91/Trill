@@ -29,6 +29,14 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public long Duration
+        {
+            get { return _fwindow.Duration; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Size
         {
             get { return _fwindow.Size; }

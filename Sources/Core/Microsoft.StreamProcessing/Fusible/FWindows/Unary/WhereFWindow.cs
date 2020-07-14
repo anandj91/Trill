@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="input"></param>
         /// <param name="filter"></param>
         public WhereFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, bool>> filter)
-            : base(input, input.Size, input.Period, input.Offset)
+            : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
             _filter = filter.Compile();
             _Payload = Input.Payload as FSubWindow<TPayload>;
