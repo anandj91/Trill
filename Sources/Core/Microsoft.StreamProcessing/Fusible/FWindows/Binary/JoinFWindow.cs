@@ -41,9 +41,14 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override int _Compute()
         {
+            if (!BV.isOutput)
+            {
+                _BV.Reset();
+            }
+
             var llen = Left.Compute();
             var rlen = Right.Compute();
-            int f = (int) (Right.Period / Left.Period);
+            int factor = Left.Length / Right.Length;
 
             var lpayload = Left.Payload.Data;
             var lpayloadOffset = Left.Payload.Offset;
@@ -62,35 +67,32 @@ namespace Microsoft.StreamProcessing
                 fixed (long* rbv = Right.BV.Data)
                 fixed (long* bv = BV.Data)
                 {
-                    for (int r = 0; r < rlen; r++)
+                    for (int r = 0; r < Right.Length; r++)
                     {
                         var rbi = rbvOffset + r;
-                        //if ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0)
+                        for (int l = r * factor; l < (r + 1) * factor; l++)
                         {
-                            for (int l = r * f; l < (r + 1) * f; l++)
+                            var lbi = lbvOffset + l;
+                            var bi = bvOffset + l;
+                            if (((lbv[lbi >> 6] & (1L << (lbi & 0x3f))) == 0)
+                                && ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0))
                             {
-                                var lbi = lbvOffset + l;
-                                var bi = bvOffset + l;
-                                if (((lbv[lbi >> 6] & (1L << (lbi & 0x3f))) == 0)
-                                    && ((rbv[rbi >> 6] & (1L << (rbi & 0x3f))) == 0))
-                                {
-                                    var lp = lpayload[lpayloadOffset + l];
-                                    var rp = rpayload[rpayloadOffset + r];
-                                    var po = payloadOffset + l;
-                                    payload[po] = _joiner(lp, rp);
-                                    bv[bi >> 6] &= ~(1L << (bi & 0x3f));
-                                }
-                                else
-                                {
-                                    bv[bi >> 6] |= (1L << (bi & 0x3f));
-                                }
+                                var lp = lpayload[lpayloadOffset + l];
+                                var rp = rpayload[rpayloadOffset + r];
+                                var po = payloadOffset + l;
+                                payload[po] = _joiner(lp, rp);
+                                bv[bi >> 6] &= ~(1L << (bi & 0x3f));
+                            }
+                            else
+                            {
+                                bv[bi >> 6] |= (1L << (bi & 0x3f));
                             }
                         }
                     }
                 }
             }
 
-            return llen;
+            return Length;
         }
 
         /// <summary>

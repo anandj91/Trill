@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public override FWindowable<TResult> Compile(long offset, long size)
         {
-            return new AggregateFWindow<TPayload, TAggState, TResult>(Input.Compile(offset, size), _aggregate, _window);
+            return new TumblingAggregateFWindow<TPayload, TAggState, TResult>(Input.Compile(offset, size), _aggregate, _window);
         }
     }
 }

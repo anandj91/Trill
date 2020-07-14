@@ -32,6 +32,7 @@ namespace Microsoft.StreamProcessing
             var fop = Transform(iop);
             fwindow = fop.Compile(0, fop.Size * 10);
             iwindow = iop.GetInputFWindow();
+            Config.DataGranularity = iwindow.Size;
             owindow = new OutputFWindow<TResult>(fwindow);
             owindow.SetBatch(this.output);
         }
@@ -57,6 +58,7 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
+            if (owindow.SyncTime == StreamEvent.InfinitySyncTime) FlushContents();
             batch.Release();
             batch.Return();
         }

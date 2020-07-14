@@ -63,5 +63,16 @@ namespace Microsoft.StreamProcessing
         public BVFSubWindow(int length) : this(length, 0, new long[(length >> 6) + 1])
         {
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Reset()
+        {
+            for (int i = 0; i < Data.Length; i++)
+            {
+                Data[i] = ~0;
+            }
+        }
     }
 }

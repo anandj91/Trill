@@ -83,7 +83,7 @@ namespace Microsoft.StreamProcessing
         protected override int _Compute()
         {
             var len = Math.Min(Length, Count - Idx);
-            _syncTime += len * Period;
+            _syncTime += Size;
             return len;
         }
 

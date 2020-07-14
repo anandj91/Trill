@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing
         private static bool clearColumnsOnReturn = false;
         private static bool disableMemoryPooling = false;
         private static int dataBatchSize = 80000;
-        private static int dataGranularity = 1;
+        private static long dataGranularity = 1;
         private static bool useMultiString = false;
         private static SortingTechnique ingressSortingTechnique = SortingTechnique.ImpatienceSort;
         private static CodegenOptions.MultiStringFlags useMultiStringTransforms = CodegenOptions.MultiStringFlags.None;
@@ -204,7 +204,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public static int DataGranularity
+        public static long DataGranularity
         {
             get => dataGranularity;
             set

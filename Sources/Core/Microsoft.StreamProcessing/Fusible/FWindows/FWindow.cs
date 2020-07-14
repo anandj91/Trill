@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public virtual long SyncTime { get; }
+        public virtual long SyncTime { get; set; }
 
         /// <summary>
         /// 

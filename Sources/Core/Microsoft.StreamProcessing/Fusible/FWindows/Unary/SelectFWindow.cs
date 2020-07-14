@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
             {
                 fixed (long* bv = Input.BV.Data)
                 {
-                    for (int i = 0; i < len; i++)
+                    for (int i = 0; i < Length; i++)
                     {
                         // TODO: Flush at the end of stream
                         var ibi = ibvOffset + i;
@@ -56,6 +56,7 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
+            SyncTime = Input.SyncTime;
             return len;
         }
     }
