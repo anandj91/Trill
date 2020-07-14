@@ -704,14 +704,17 @@ namespace Microsoft.StreamProcessing
 
             if (this.Count >= this.vsync.col.Length) return false;
 
-            this.vsync.col[this.Count] = vsync;
-            this.vother.col[this.Count] = StreamEvent.PunctuationOtherTime;
-            if (this.key != null) this.key.col[this.Count] = default;
-            if (this.payload != null) this.payload.col[this.Count] = default;
-            this.hash.col[this.Count] = 0;
-            this.bitvector.col[this.Count >> 6] |= 1L << (this.Count & 0x3f);
+            while (this.Count < this.vsync.col.Length)
+            {
+                this.vsync.col[this.Count] = vsync;
+                this.vother.col[this.Count] = StreamEvent.PunctuationOtherTime;
+                if (this.key != null) this.key.col[this.Count] = default;
+                if (this.payload != null) this.payload.col[this.Count] = default;
+                this.hash.col[this.Count] = 0;
+                this.bitvector.col[this.Count >> 6] |= 1L << (this.Count & 0x3f);
+                this.Count++;
+            }
 
-            this.Count++;
             return true;
         }
 
