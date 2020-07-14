@@ -44,7 +44,6 @@ namespace Microsoft.StreamProcessing
                 {
                     for (int i = 0; i < Length; i++)
                     {
-                        // TODO: Flush at the end of stream
                         var ibi = ibvOffset + i;
                         if ((bv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
                         {

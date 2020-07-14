@@ -61,6 +61,9 @@ namespace Microsoft.StreamProcessing
             var rbvOffset = Right.BV.Offset;
             var bvOffset = BV.Offset;
 
+            var lsyncOffset = Left.Sync.Offset;
+            SyncTime = Left.Sync.Data[lsyncOffset];
+
             unsafe
             {
                 fixed (long* lbv = Left.BV.Data)
@@ -92,6 +95,7 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
+            SyncTime += Size;
             return Length;
         }
 

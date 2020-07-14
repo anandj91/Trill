@@ -54,7 +54,6 @@ namespace Microsoft.StreamProcessing
                 {
                     for (int i = 0; i < Length; i++)
                     {
-                        // TODO: Flush at the end of stream
                         var ibi = ibvOffset + i;
                         var obi = obvOffset + i;
                         var pi = payloadOffset + i;

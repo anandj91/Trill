@@ -36,7 +36,6 @@ namespace Microsoft.StreamProcessing
             _init = _aggregate.InitialState().Compile();
             _acc = _aggregate.Accumulate().Compile();
             _res = _aggregate.ComputeResult().Compile();
-            // TODO: Need to handle gaps. Currently BV is always true.
             _BV = new BVFSubWindow(Length);
         }
 

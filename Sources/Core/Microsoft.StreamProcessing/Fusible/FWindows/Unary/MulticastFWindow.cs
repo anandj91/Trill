@@ -39,6 +39,7 @@ namespace Microsoft.StreamProcessing
                 _isComputed = true;
                 _hasSlid = false;
                 _slide = false;
+                SyncTime = Input.SyncTime;
             }
 
             return _len;
