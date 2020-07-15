@@ -105,6 +105,23 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override bool _Slide(long tsync) => Left.Slide(tsync) && Right.Slide(tsync);
+        protected override bool _Slide(long tsync)
+        {
+            bool ret = Left.Slide(tsync);
+            while (ret && Left.SyncTime != Right.SyncTime)
+            {
+                if (Right.SyncTime < Left.SyncTime)
+                {
+                    ret &= Right.Slide(Left.SyncTime);
+                }
+                else
+                {
+                    ret &= Left.Slide(Right.SyncTime);
+                }
+            }
+
+            SyncTime = Left.SyncTime;
+            return ret;
+        }
     }
 }

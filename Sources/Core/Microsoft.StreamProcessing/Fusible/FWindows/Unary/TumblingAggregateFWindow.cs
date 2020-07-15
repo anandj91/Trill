@@ -113,6 +113,11 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="tsync"></param>
         /// <returns></returns>
-        protected override bool _Slide(long tsync) => Input.Slide(tsync);
+        protected override bool _Slide(long tsync)
+        {
+            var ret = Input.Slide(tsync);
+            SyncTime = Input.SyncTime;
+            return ret;
+        }
     }
 }

@@ -127,7 +127,20 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Init() => _fwindow.Init();
+        public bool Init()
+        {
+            var ret = _fwindow.Init();
+            if (!isUpdated)
+            {
+                UpdateSubWindows(Payload, _obatch.payload, _obatch.Count);
+                UpdateSubWindows(Sync, _obatch.vsync, _obatch.Count);
+                UpdateSubWindows(Other, _obatch.vother, _obatch.Count);
+                UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
+                isUpdated = true;
+            }
+
+            return ret;
+        }
 
         /// <summary>
         /// 

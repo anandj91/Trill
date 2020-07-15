@@ -46,12 +46,11 @@ namespace Microsoft.StreamProcessing
         public override IDisposable Subscribe(IStreamObserver<Empty, TResult> observer)
         {
             this.Observer = observer;
+            owindow.SetBatch(this.output);
             if (!owindow.Init())
             {
                 throw new Exception("Fused window init failed");
             }
-
-            owindow.SetBatch(this.output);
 
             int len = 0;
             while (owindow.Slide(owindow.SyncTime))
