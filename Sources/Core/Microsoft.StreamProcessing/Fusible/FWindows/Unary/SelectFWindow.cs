@@ -28,7 +28,12 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override bool _Init() => Input.Init();
+        protected override bool _Init()
+        {
+            var ret = Input.Init();
+            SyncTime = Input.SyncTime;
+            return ret;
+        }
 
         /// <summary>
         /// 

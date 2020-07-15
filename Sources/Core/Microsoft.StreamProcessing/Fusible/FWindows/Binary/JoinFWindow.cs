@@ -40,7 +40,12 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        protected override bool _Init() => Left.Init() && Right.Init();
+        protected override bool _Init()
+        {
+            var ret = Left.Init() && Right.Init();
+            SyncTime = Left.SyncTime;
+            return ret;
+        }
 
         /// <summary>
         /// 

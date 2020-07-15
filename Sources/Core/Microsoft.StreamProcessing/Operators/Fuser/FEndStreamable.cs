@@ -53,15 +53,15 @@ namespace Microsoft.StreamProcessing
             }
 
             int len = 0;
-            while (owindow.Slide(owindow.SyncTime))
+            do
             {
                 len = owindow.Compute();
-                if (this.output.Count >= Config.DataBatchSize - owindow.Length)
+                if (this.output.Count > Config.DataBatchSize - owindow.Length)
                 {
                     FlushContents();
                     owindow.SetBatch(this.output);
                 }
-            }
+            } while (owindow.Slide(owindow.SyncTime));
 
             FlushContents();
             observer.OnCompleted();

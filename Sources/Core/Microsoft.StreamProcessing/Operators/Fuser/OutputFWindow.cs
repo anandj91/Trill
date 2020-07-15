@@ -114,6 +114,18 @@ namespace Microsoft.StreamProcessing
             }
         }
 
+        private void CheckAndUpdate()
+        {
+            if (!isUpdated)
+            {
+                UpdateSubWindows(Payload, _obatch.payload, _obatch.Count);
+                UpdateSubWindows(Sync, _obatch.vsync, _obatch.Count);
+                UpdateSubWindows(Other, _obatch.vother, _obatch.Count);
+                UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
+                isUpdated = true;
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -130,15 +142,7 @@ namespace Microsoft.StreamProcessing
         public bool Init()
         {
             var ret = _fwindow.Init();
-            if (!isUpdated)
-            {
-                UpdateSubWindows(Payload, _obatch.payload, _obatch.Count);
-                UpdateSubWindows(Sync, _obatch.vsync, _obatch.Count);
-                UpdateSubWindows(Other, _obatch.vother, _obatch.Count);
-                UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
-                isUpdated = true;
-            }
-
+            CheckAndUpdate();
             return ret;
         }
 
@@ -148,15 +152,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public int Compute()
         {
-            if (!isUpdated)
-            {
-                UpdateSubWindows(Payload, _obatch.payload, _obatch.Count);
-                UpdateSubWindows(Sync, _obatch.vsync, _obatch.Count);
-                UpdateSubWindows(Other, _obatch.vother, _obatch.Count);
-                UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
-                isUpdated = true;
-            }
-
+            CheckAndUpdate();
             var len = _fwindow.Compute();
             _obatch.Count += len;
             return len;
