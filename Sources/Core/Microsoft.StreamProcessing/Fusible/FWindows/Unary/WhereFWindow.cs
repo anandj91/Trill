@@ -29,6 +29,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        protected override bool _Init() => Input.Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         protected override int _Compute()
         {
             var len = Input.Compute();
@@ -69,5 +74,11 @@ namespace Microsoft.StreamProcessing
             SyncTime = Input.SyncTime;
             return len;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool _Slide(long tsync) => Input.Slide(tsync);
     }
 }

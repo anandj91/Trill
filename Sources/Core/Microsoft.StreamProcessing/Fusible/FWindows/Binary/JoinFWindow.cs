@@ -40,6 +40,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        protected override bool _Init() => Left.Init() && Right.Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         protected override int _Compute()
         {

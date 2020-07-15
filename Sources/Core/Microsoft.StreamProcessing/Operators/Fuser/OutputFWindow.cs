@@ -127,6 +127,12 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
+        public bool Init() => _fwindow.Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public int Compute()
         {
             if (!isUpdated)
@@ -137,6 +143,7 @@ namespace Microsoft.StreamProcessing
                 UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
                 isUpdated = true;
             }
+
             var len = _fwindow.Compute();
             _obatch.Count += len;
             return len;

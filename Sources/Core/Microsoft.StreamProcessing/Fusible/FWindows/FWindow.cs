@@ -112,6 +112,16 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        public bool Init() => _Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected abstract bool _Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         public virtual int Compute() => _Compute();
 
         /// <summary>

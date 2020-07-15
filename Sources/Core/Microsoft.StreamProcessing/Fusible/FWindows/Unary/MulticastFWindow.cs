@@ -31,6 +31,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        protected override bool _Init() => Input.Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         protected override int _Compute()
         {

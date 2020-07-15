@@ -62,6 +62,12 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public bool Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         public int Compute();
 
         /// <summary>

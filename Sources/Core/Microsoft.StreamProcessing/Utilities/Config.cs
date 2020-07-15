@@ -211,7 +211,8 @@ namespace Microsoft.StreamProcessing
             set
             {
                 // Needs to be non-zero
-                Invariant.IsTrue(value > 0 && value <= dataBatchSize, "Set batch size higher than data granularity");
+                Invariant.IsTrue(value > 0 && value <= dataBatchSize,
+                    "Set batch size higher than data granularity " + value);
 
                 TraceConfigChanges("DataGranularity", dataGranularity, value);
                 dataGranularity = value;

@@ -33,6 +33,14 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        ~InputFWindow()
+        {
+            CheckAndRelease();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public override long SyncTime
         {
             get { return _syncTime; }
@@ -86,6 +94,28 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        protected override bool _Init()
+        {
+            try
+            {
+                if (_batch == null)
+                {
+                    var batch = _queue.Take();
+                    SetBatch(batch);
+                    _syncTime = Sync[0];
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         protected override int _Compute()
         {
             var len = Math.Min(Length, Count - Idx);
@@ -100,7 +130,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public override bool Slide(long tsync)
         {
-            while (_batch == null || !_Slide(tsync))
+            while (!_Slide(tsync))
             {
                 try
                 {
@@ -109,12 +139,6 @@ namespace Microsoft.StreamProcessing
                 }
                 catch (InvalidOperationException)
                 {
-                    if (_batch != null)
-                    {
-                        _batch.Release();
-                        _batch.Return();
-                    }
-
                     return false;
                 }
             }
@@ -122,17 +146,21 @@ namespace Microsoft.StreamProcessing
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void SetBatch(StreamMessage<Empty, TPayload> batch)
+        private void CheckAndRelease()
         {
             if (_batch != null)
             {
                 _batch.Release();
                 _batch.Return();
             }
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetBatch(StreamMessage<Empty, TPayload> batch)
+        {
+            CheckAndRelease();
             _batch = batch;
             Idx = 0;
             Count = batch.Count;

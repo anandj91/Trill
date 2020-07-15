@@ -46,11 +46,15 @@ namespace Microsoft.StreamProcessing
         public override IDisposable Subscribe(IStreamObserver<Empty, TResult> observer)
         {
             this.Observer = observer;
-            owindow.Slide(owindow.SyncTime);
+            if (!owindow.Init())
+            {
+                throw new Exception("Fused window init failed");
+            }
+
             owindow.SetBatch(this.output);
 
             int len = 0;
-            do
+            while (owindow.Slide(owindow.SyncTime))
             {
                 len = owindow.Compute();
                 if (this.output.Count >= Config.DataBatchSize - owindow.Length)
@@ -58,7 +62,7 @@ namespace Microsoft.StreamProcessing
                     FlushContents();
                     owindow.SetBatch(this.output);
                 }
-            } while (owindow.Slide(owindow.SyncTime));
+            }
 
             FlushContents();
             observer.OnCompleted();

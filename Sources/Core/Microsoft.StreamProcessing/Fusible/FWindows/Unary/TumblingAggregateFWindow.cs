@@ -42,6 +42,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        protected override bool _Init() => Input.Init();
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         protected override int _Compute()
         {
@@ -102,5 +107,12 @@ namespace Microsoft.StreamProcessing
 
             return Length;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tsync"></param>
+        /// <returns></returns>
+        protected override bool _Slide(long tsync) => Input.Slide(tsync);
     }
 }
