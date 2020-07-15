@@ -38,7 +38,8 @@ namespace Microsoft.StreamProcessing
             this.pool.Get(out this.output);
             this.output.Allocate();
 
-            var fwindow = fop.Compile(0, fop.Size * 10);
+            var fwindow = fop.Compile(0, fop.Size * Config.FuseFactor);
+            Config.DataGranularity = fwindow.Size;
             owindow = new OutputFWindow<TResult>(fwindow);
         }
 

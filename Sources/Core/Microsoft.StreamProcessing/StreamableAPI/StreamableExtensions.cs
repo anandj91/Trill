@@ -1187,14 +1187,12 @@ namespace Microsoft.StreamProcessing
         /// <param name="offset"></param>
         /// <typeparam name="TPayload"></typeparam>
         /// <returns></returns>
-        public static FOperation<TPayload> FuseStart<TPayload>(
+        public static FStartPipe<TPayload> FuseStart<TPayload>(
             this IStreamable<Empty, TPayload> source, long period, long offset)
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            var pipe = new FStartPipe<TPayload>(period, offset);
-            source.Subscribe(Config.StreamScheduler.RegisterStreamObserver(pipe));
-            return pipe.GetFOP();
+            return new FStartPipe<TPayload>(source, period, offset);
         }
 
         /** following are internal for now **/
