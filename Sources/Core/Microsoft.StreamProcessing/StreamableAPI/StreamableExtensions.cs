@@ -1183,16 +1183,13 @@ namespace Microsoft.StreamProcessing
         /// Fuse start
         /// </summary>
         /// <param name="source"></param>
-        /// <param name="period"></param>
-        /// <param name="offset"></param>
         /// <typeparam name="TPayload"></typeparam>
         /// <returns></returns>
-        public static FStartPipe<TPayload> FuseStart<TPayload>(
-            this IStreamable<Empty, TPayload> source, long period, long offset)
+        public static FStartPipe<TPayload> FuseStart<TPayload>(this IStreamable<Empty, TPayload> source)
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            return new FStartPipe<TPayload>(source, period, offset);
+            return new FStartPipe<TPayload>(source, (long) source.Properties.ConstantDurationLength, 0);
         }
 
         /** following are internal for now **/
