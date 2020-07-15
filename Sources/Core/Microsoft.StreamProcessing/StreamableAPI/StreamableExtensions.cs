@@ -1180,20 +1180,21 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Fuse operation.
+        /// Fuse start
         /// </summary>
-        /// <param name="source">Source streamable for the operation.</param>
-        /// <param name="transform"></param>
+        /// <param name="source"></param>
         /// <param name="period"></param>
         /// <param name="offset"></param>
-        public static IStreamable<Empty, TResult> Fuse<TPayload, TResult>(
-            this IStreamable<Empty, TPayload> source,
-            Func<FOperation<TPayload>, FOperation<TResult>> transform,
-            long period, long offset)
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TPayload> FuseStart<TPayload>(
+            this IStreamable<Empty, TPayload> source, long period, long offset)
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            return new FuseStreamable<TPayload, TResult>(source, transform, period, offset);
+            var pipe = new FStartPipe<TPayload>(period, offset);
+            source.Subscribe(Config.StreamScheduler.RegisterStreamObserver(pipe));
+            return pipe.GetFOP();
         }
 
         /** following are internal for now **/

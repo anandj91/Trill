@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 
 namespace Microsoft.StreamProcessing
 {
@@ -8,6 +9,8 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     public class InputFWindow<TPayload> : FWindow<TPayload>
     {
+        private BlockingCollection<StreamMessage<Empty, TPayload>> _queue;
+        private StreamMessage<Empty, TPayload> _batch;
         private int Idx;
         private int Count;
         private long _syncTime;
@@ -15,8 +18,11 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public InputFWindow(long size, long period, long offset) : base(size, period, offset, period)
+        public InputFWindow(BlockingCollection<StreamMessage<Empty, TPayload>> queue,
+            long size, long period, long offset
+        ) : base(size, period, offset, period)
         {
+            _queue = queue;
             Payload.isInput = true;
             Sync.isInput = true;
             Other.isInput = true;
@@ -90,8 +96,44 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public void SetBatch(StreamMessage<Empty, TPayload> batch)
+        /// <param name="tsync"></param>
+        /// <returns></returns>
+        public override bool Slide(long tsync)
         {
+            while (_batch == null || !_Slide(tsync))
+            {
+                try
+                {
+                    var batch = _queue.Take();
+                    SetBatch(batch);
+                }
+                catch (InvalidOperationException)
+                {
+                    if (_batch != null)
+                    {
+                        _batch.Release();
+                        _batch.Return();
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetBatch(StreamMessage<Empty, TPayload> batch)
+        {
+            if (_batch != null)
+            {
+                _batch.Release();
+                _batch.Return();
+            }
+
+            _batch = batch;
             Idx = 0;
             Count = batch.Count;
             //TODO: Need to deal with gaps

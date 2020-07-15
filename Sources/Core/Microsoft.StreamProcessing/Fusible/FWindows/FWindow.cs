@@ -112,7 +112,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public int Compute() => _Compute();
+        public virtual int Compute() => _Compute();
 
         /// <summary>
         /// 
@@ -124,7 +124,7 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Slide(long tsync) => _Slide(tsync);
+        public virtual bool Slide(long tsync) => _Slide(tsync);
 
         /// <summary>
         /// 

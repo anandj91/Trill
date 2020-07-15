@@ -8,6 +8,7 @@ namespace Microsoft.StreamProcessing
     public class OutputFWindow<TResult> : FWindowable<TResult>
     {
         private StreamMessage<Empty, TResult> _obatch;
+        private bool isUpdated;
         private FWindowable<TResult> _fwindow;
 
         /// <summary>
@@ -16,6 +17,7 @@ namespace Microsoft.StreamProcessing
         public OutputFWindow(FWindowable<TResult> fwindow)
         {
             _fwindow = fwindow;
+            isUpdated = false;
         }
 
         /// <summary>
@@ -118,10 +120,7 @@ namespace Microsoft.StreamProcessing
         public void SetBatch(StreamMessage<Empty, TResult> obatch)
         {
             _obatch = obatch;
-            UpdateSubWindows(Payload, obatch.payload, obatch.Count);
-            UpdateSubWindows(Sync, obatch.vsync, obatch.Count);
-            UpdateSubWindows(Other, obatch.vother, obatch.Count);
-            UpdateSubWindows(BV, obatch.bitvector, obatch.Count);
+            isUpdated = false;
         }
 
         /// <summary>
@@ -130,6 +129,14 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public int Compute()
         {
+            if (!isUpdated)
+            {
+                UpdateSubWindows(Payload, _obatch.payload, _obatch.Count);
+                UpdateSubWindows(Sync, _obatch.vsync, _obatch.Count);
+                UpdateSubWindows(Other, _obatch.vother, _obatch.Count);
+                UpdateSubWindows(BV, _obatch.bitvector, _obatch.Count);
+                isUpdated = true;
+            }
             var len = _fwindow.Compute();
             _obatch.Count += len;
             return len;

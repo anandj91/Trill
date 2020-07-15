@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -6,7 +8,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     public class FInputOperation<TPayload> : FOperation<TPayload>
     {
-        private InputFWindow<TPayload> _input;
+        private BlockingCollection<StreamMessage<Empty, TPayload>> _queue;
         private readonly long _period;
         private readonly long _offset;
 
@@ -17,6 +19,7 @@ namespace Microsoft.StreamProcessing
         {
             _period = period;
             _offset = offset;
+            _queue = new BlockingCollection<StreamMessage<Empty, TPayload>>(2);
         }
 
         /// <summary>
@@ -49,17 +52,16 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public FWindowable<TPayload> Compile(long offset, long size)
         {
-            _input = new InputFWindow<TPayload>(size, Period, Offset);
-            return _input;
+            return new InputFWindow<TPayload>(_queue, size, Period, Offset);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public InputFWindow<TPayload> GetInputFWindow()
+        public BlockingCollection<StreamMessage<Empty, TPayload>> GetInputQueue()
         {
-            return _input;
+            return _queue;
         }
     }
 }

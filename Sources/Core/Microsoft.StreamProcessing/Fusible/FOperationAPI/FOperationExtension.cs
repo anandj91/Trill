@@ -116,5 +116,16 @@ namespace Microsoft.StreamProcessing.FOperationAPI
 
             return new JoinFOperation<TLeft, TRight, TResult>(left, right, joiner);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fop"></param>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static IStreamable<Empty, TResult> FuseEnd<TResult>(this FOperation<TResult> fop)
+        {
+            return new FEndStreamable<TResult>(fop);
+        }
     }
 }
