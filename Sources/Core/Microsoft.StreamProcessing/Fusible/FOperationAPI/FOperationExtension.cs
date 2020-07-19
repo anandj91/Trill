@@ -136,6 +136,18 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="input"></param>
+        /// <param name="period"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TPayload> Chop<TPayload>(this FOperation<TPayload> input, long period)
+        {
+            return new ChopFOperation<TPayload>(input, period);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="fop"></param>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>

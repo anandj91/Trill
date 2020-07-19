@@ -103,11 +103,42 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public void Reset()
+        public void Set()
         {
-            for (int i = 0; i < Data.Length; i++)
+            if (isOutput)
             {
-                Data[i] = ~0;
+                for (int i = Offset; i < Offset + Length; i++)
+                {
+                    Data[i >> 6] |= (1L << (i & 0x3f));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < Data.Length; i++)
+                {
+                    Data[i] = ~0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Unset()
+        {
+            if (isOutput)
+            {
+                for (int i = Offset; i < Offset + Length; i++)
+                {
+                    Data[i >> 6] &= ~(1L << (i & 0x3f));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < Data.Length; i++)
+                {
+                    Data[i] = 0;
+                }
             }
         }
     }
