@@ -34,5 +34,10 @@ namespace Microsoft.StreamProcessing
         /// 
         /// </summary>
         public T this[int i] { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Copy(FSubWindowable<B, T> output);
     }
 }

@@ -11,9 +11,11 @@ namespace Microsoft.StreamProcessing
     {
         private BlockingCollection<StreamMessage<Empty, TPayload>> _queue;
         private StreamMessage<Empty, TPayload> _batch;
+        private StreamMessage<Empty, TPayload> _prevBatch;
         private int Idx;
         private int Count;
         private long _syncTime;
+        private bool isNewBatch;
 
         /// <summary>
         /// 
@@ -28,6 +30,8 @@ namespace Microsoft.StreamProcessing
             Other.isInput = true;
             BV.isInput = true;
             _syncTime = -1;
+            isNewBatch = false;
+            _prevBatch = null;
         }
 
         /// <summary>
@@ -35,7 +39,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         ~InputFWindow()
         {
-            CheckAndRelease();
+            CheckAndRelease(_prevBatch);
+            CheckAndRelease(_batch);
         }
 
         /// <summary>
@@ -48,14 +53,14 @@ namespace Microsoft.StreamProcessing
 
         private int NextShift(long tsync)
         {
-            if (Sync[0] == StreamEvent.InfinitySyncTime) return 1;
+            if (_batch.vsync.col[Idx] == StreamEvent.InfinitySyncTime) return 1;
 
-            int len = (int) Math.Min((tsync - Sync[0]) / Period, Count - Idx);
+            int len = (int) Math.Min((tsync - _batch.vsync.col[Idx]) / Period, Count - Idx);
             int s = 0;
-            while (len > 0 && Sync[s + len - 1] > tsync)
+            while (len > 0 && _batch.vsync.col[Idx + s + len - 1] > tsync)
             {
                 len /= 2;
-                if (Sync[s + len - 1] < tsync)
+                if (_batch.vsync.col[Idx + s + len - 1] < tsync)
                 {
                     s += len;
                 }
@@ -83,12 +88,8 @@ namespace Microsoft.StreamProcessing
             }
 
             Idx += shift;
-            Payload.Offset = Idx;
-            Sync.Offset = Idx;
-            Other.Offset = Idx;
-            BV.Offset = Idx;
-            _syncTime = Sync.Data[Idx];
-            return SyncTime < StreamEvent.InfinitySyncTime;
+            _syncTime = _batch.vsync.col[Idx];
+            return _syncTime < StreamEvent.InfinitySyncTime;
         }
 
         /// <summary>
@@ -102,7 +103,13 @@ namespace Microsoft.StreamProcessing
                 {
                     var batch = _queue.Take();
                     SetBatch(batch);
-                    _syncTime = Sync[0];
+                    _prevBatch = null;
+                    _Payload.Data = _batch.payload.col;
+                    _Sync.Data = _batch.vsync.col;
+                    _Other.Data = _batch.vother.col;
+                    _BV.Data = _batch.bitvector.col;
+                    isNewBatch = false;
+                    _syncTime = _batch.vsync.col[0];
                 }
             }
             catch (InvalidOperationException)
@@ -119,6 +126,21 @@ namespace Microsoft.StreamProcessing
         protected override int _Compute()
         {
             var len = Math.Min(Length, Count - Idx);
+            if (isNewBatch)
+            {
+                CheckAndRelease(_prevBatch);
+                _prevBatch = null;
+                _Payload.Data = _batch.payload.col;
+                _Sync.Data = _batch.vsync.col;
+                _Other.Data = _batch.vother.col;
+                _BV.Data = _batch.bitvector.col;
+                isNewBatch = false;
+            }
+
+            Payload.Offset = Idx;
+            Sync.Offset = Idx;
+            Other.Offset = Idx;
+            BV.Offset = Idx;
             _syncTime += Size;
             return len;
         }
@@ -146,12 +168,12 @@ namespace Microsoft.StreamProcessing
             return true;
         }
 
-        private void CheckAndRelease()
+        private void CheckAndRelease(StreamMessage<Empty, TPayload> batch)
         {
-            if (_batch != null)
+            if (batch != null)
             {
-                _batch.Release();
-                _batch.Return();
+                batch.Release();
+                batch.Return();
             }
         }
 
@@ -160,19 +182,11 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         private void SetBatch(StreamMessage<Empty, TPayload> batch)
         {
-            CheckAndRelease();
+            _prevBatch = _batch;
             _batch = batch;
             Idx = 0;
             Count = batch.Count;
-            //TODO: Need to deal with gaps
-            _Payload.Data = batch.payload.col;
-            _Payload.Offset = 0;
-            _Sync.Data = batch.vsync.col;
-            _Sync.Offset = 0;
-            _Other.Data = batch.vother.col;
-            _Other.Offset = 0;
-            _BV.Data = batch.bitvector.col;
-            _BV.Offset = 0;
+            isNewBatch = true;
         }
     }
 }

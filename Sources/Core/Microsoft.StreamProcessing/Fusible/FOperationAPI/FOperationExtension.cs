@@ -120,6 +120,22 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="input"></param>
+        /// <param name="joiner"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TResult> ConsecutivePairs<TPayload, TResult>(
+            this FOperation<TPayload> input,
+            Expression<Func<TPayload, TPayload, TResult>> joiner
+        )
+        {
+            return new PairFOperation<TPayload, TResult>(input, joiner);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="fop"></param>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>

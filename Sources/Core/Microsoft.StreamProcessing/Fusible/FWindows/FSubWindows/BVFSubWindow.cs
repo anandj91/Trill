@@ -39,6 +39,42 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="output"></param>
+        public void Copy(FSubWindowable<long, bool> output)
+        {
+            _Copy(output as BVFSubWindow);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void _Copy(BVFSubWindow output)
+        {
+            unsafe
+            {
+                fixed (long* ibv = Data)
+                fixed (long* obv = output.Data)
+                {
+                    for (int i = 0; i < Length; i++)
+                    {
+                        var ibi = Offset + i;
+                        var obi = output.Offset + i;
+                        if ((ibv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
+                        {
+                            obv[obi >> 6] &= ~(1L << (obi & 0x3f));
+                        }
+                        else
+                        {
+                            obv[obi >> 6] |= (1L << (obi & 0x3f));
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="length"></param>
         /// <param name="offset"></param>
         /// <param name="data"></param>

@@ -1,3 +1,5 @@
+using System;
+
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -36,6 +38,20 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="i"></param>
         public virtual T this[int i] => Data[Offset + i];
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="output"></param>
+        public void Copy(FSubWindowable<T, T> output)
+        {
+            var ioffset = Offset;
+            var ooffset = output.Offset;
+            for (int i = 0; i < Length; i++)
+            {
+                output.Data[ooffset + i] = Data[ioffset + i];
+            }
+        }
 
         /// <summary>
         /// 
