@@ -160,6 +160,24 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="input"></param>
+        /// <param name="window"></param>
+        /// <param name="transform"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TResult> Transform<TPayload, TResult>(
+            this FOperation<TPayload> input,
+            long window,
+            Action<int, TPayload[], int, TResult[], int> transform
+        )
+        {
+            return new W2WFOperation<TPayload, TResult>(input, window, transform);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="fop"></param>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>
