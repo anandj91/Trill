@@ -10,12 +10,12 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class SelectFWindow<TPayload, TResult> : UnaryFWindow<TPayload, TResult>
     {
-        private Func<TPayload, TResult> _selector;
+        private Func<long, TPayload, TResult> _selector;
 
         /// <summary>
         /// 
         /// </summary>
-        public SelectFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, TResult>> selector)
+        public SelectFWindow(FWindowable<TPayload> input, Expression<Func<long, TPayload, TResult>> selector)
             : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
             _selector = selector.Compile();
@@ -42,6 +42,7 @@ namespace Microsoft.StreamProcessing
         {
             var len = Input.Compute();
 
+            var period = Period;
             var ipayload = Input.Payload.Data;
             var ipayloadOffset = Input.Payload.Offset;
             var opayload = Payload.Data;
@@ -59,13 +60,14 @@ namespace Microsoft.StreamProcessing
                         {
                             var pi = ipayloadOffset + i;
                             var po = opayloadOffset + i;
-                            opayload[po] = _selector(ipayload[pi]);
+                            opayload[po] = _selector(SyncTime, ipayload[pi]);
                         }
+
+                        SyncTime += period;
                     }
                 }
             }
 
-            SyncTime = Input.SyncTime;
             return len;
         }
 

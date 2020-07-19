@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <returns></returns>
         public static FOperation<TResult> Select<TPayload, TResult>(
             this FOperation<TPayload> source,
-            Expression<Func<TPayload, TResult>> selector
+            Expression<Func<long, TPayload, TResult>> selector
         )
         {
             Invariant.IsNotNull(source, nameof(source));
