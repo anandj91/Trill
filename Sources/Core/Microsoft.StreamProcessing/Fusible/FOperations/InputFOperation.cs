@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
         {
             _period = period;
             _offset = offset;
-            _queue = new BlockingCollection<StreamMessage<Empty, TPayload>>(2);
+            _queue = new BlockingCollection<StreamMessage<Empty, TPayload>>(1);
         }
 
         /// <summary>
