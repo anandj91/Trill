@@ -31,6 +31,7 @@ namespace Microsoft.StreamProcessing
             Offset = offset;
             _iop = new FInputOperation<TPayload>(period, offset);
             _queue = _iop.GetInputQueue();
+            this.ClassId = Guid.NewGuid();
         }
 
         /// <summary>
@@ -143,9 +144,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// 
         /// </summary>
-        public Guid ClassId
-        {
-            get { return Guid.Parse("FStartPipe"); }
-        }
+        public Guid ClassId { get; }
     }
 }
