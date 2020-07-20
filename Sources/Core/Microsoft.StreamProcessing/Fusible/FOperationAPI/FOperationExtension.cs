@@ -178,6 +178,21 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="input"></param>
+        /// <param name="durationSelector"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TPayload> AlterEventDuration<TPayload>(
+            this FOperation<TPayload> input,
+            Expression<Func<long, long, long>> durationSelector
+        )
+        {
+            return new AlterDurationFOperation<TPayload>(input, durationSelector);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="fop"></param>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>
