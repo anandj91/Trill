@@ -60,14 +60,10 @@ namespace Microsoft.StreamProcessing
                     for (; i < Length && syncTime < _other; i++)
                     {
                         sync[syncOffset + i] = syncTime;
-                        if (_sync <= syncTime && syncTime < _other)
-                        {
-                            payload[payloadOffset + i] = _payload;
-                            _sync += period;
-                            var bi = bvOffset + i;
-                            bv[bi >> 6] &= ~(1L << (bi & 0x3f));
-                        }
-
+                        payload[payloadOffset + i] = _payload;
+                        _sync += period;
+                        var bi = bvOffset + i;
+                        bv[bi >> 6] &= ~(1L << (bi & 0x3f));
                         syncTime += period;
                         other[otherOffset + i] = syncTime;
                     }

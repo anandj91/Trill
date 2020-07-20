@@ -35,12 +35,13 @@ namespace Microsoft.StreamProcessing
             {
                 ret &= InitInput();
             }
-
+            
             return ret;
         }
 
         private bool InitInput()
         {
+            SyncTime = Input.SyncTime;
             Input.Compute();
             return Input.Slide(Input.SyncTime);
         }

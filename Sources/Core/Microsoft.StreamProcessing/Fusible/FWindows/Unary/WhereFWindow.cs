@@ -43,14 +43,7 @@ namespace Microsoft.StreamProcessing
         {
             var len = Input.Compute();
 
-            if (!BV.isOutput)
-            {
-                /* Init bits to zero */
-                for (int i = 0; i < BV.Data.Length; i++)
-                {
-                    BV.Data[i] = 0;
-                }
-            }
+            _BV.Unset();
 
             var payload = Payload.Data;
             var payloadOffset = Payload.Offset;
