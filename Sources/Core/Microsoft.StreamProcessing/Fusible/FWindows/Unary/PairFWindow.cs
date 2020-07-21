@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
             {
                 ret &= InitInput();
             }
-            
+
             return ret;
         }
 
@@ -155,11 +155,14 @@ namespace Microsoft.StreamProcessing
         protected override bool _Slide(long tsync)
         {
             var ret = true;
-            ret &= Input.Slide(tsync);
-
-            if (ret && tsync > SyncTime)
+            if (tsync > SyncTime)
             {
+                ret &= Input.Slide(tsync);
                 ret &= InitInput();
+            }
+            else
+            {
+                ret &= Input.Slide(SyncTime + Size);
             }
 
             return ret;
