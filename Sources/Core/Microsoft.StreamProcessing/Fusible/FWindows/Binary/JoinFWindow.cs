@@ -110,6 +110,7 @@ namespace Microsoft.StreamProcessing
         protected override bool _Slide(long tsync)
         {
             bool ret = Left.Slide(tsync);
+            ret &= Right.Slide(tsync);
             while (ret && Left.SyncTime != Right.SyncTime)
             {
                 if (Right.SyncTime < Left.SyncTime)
