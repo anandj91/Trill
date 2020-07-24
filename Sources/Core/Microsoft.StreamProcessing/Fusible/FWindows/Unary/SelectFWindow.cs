@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing
                         {
                             var pi = ipayloadOffset + i;
                             var po = opayloadOffset + i;
-                            _selector(SyncTime, ipayload[pi], out opayload[po]);
+                            _selector(syncTime, ipayload[pi], out opayload[po]);
                         }
 
                         syncTime += period;
