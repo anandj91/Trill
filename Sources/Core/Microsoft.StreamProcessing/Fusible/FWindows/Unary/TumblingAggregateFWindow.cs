@@ -68,15 +68,16 @@ namespace Microsoft.StreamProcessing
             var syncOffset = Sync.Offset;
             var otherOffset = Other.Offset;
             var bvOffset = BV.Offset;
-            SyncTime = Input.Sync.Data[isyncOffset];
+            var syncTime = Input.Sync.Data[isyncOffset];
 
+            var length = Length;
             var factor = Input.Length / Length;
             unsafe
             {
                 fixed (long* ibv = Input.BV.Data)
                 fixed (long* bv = _BV.Data)
                 {
-                    for (int j = 0; j < Length; j++)
+                    for (int j = 0; j < length; j++)
                     {
                         bool hasResult = false;
                         _state = _init();
@@ -87,7 +88,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 var ipi = ipayloadOffset + i;
                                 var item = ipayload[ipi];
-                                _state = _acc(_state, SyncTime + i * iperiod, item);
+                                _state = _acc(_state, syncTime + i * iperiod, item);
                                 hasResult = true;
                             }
                         }
@@ -96,8 +97,8 @@ namespace Microsoft.StreamProcessing
                         if (hasResult)
                         {
                             payload[payloadOffset + j] = _res(_state);
-                            _Sync.Data[syncOffset + j] = SyncTime;
-                            _Other.Data[otherOffset + j] = SyncTime + period;
+                            _Sync.Data[syncOffset + j] = syncTime;
+                            _Other.Data[otherOffset + j] = syncTime + period;
                             bv[bi >> 6] &= ~(1L << (bi & 0x3f));
                         }
                         else
@@ -105,10 +106,12 @@ namespace Microsoft.StreamProcessing
                             bv[bi >> 6] |= (1L << (bi & 0x3f));
                         }
 
-                        SyncTime += period;
+                        syncTime += period;
                     }
                 }
             }
+
+            SyncTime = syncTime;
 
             return Length;
         }

@@ -53,9 +53,10 @@ namespace Microsoft.StreamProcessing
             var ipayloadOffset = Input.Payload.Offset;
             var payload = Payload.Data;
             var payloadOffset = Payload.Offset;
+            var length = Length;
 
             var wlen = (int) (_window / Period);
-            for (int i = 0; i < Length; i += wlen)
+            for (int i = 0; i < length; i += wlen)
             {
                 _transform(ipayloadOffset + i, ipayload, payloadOffset + i, payload, wlen);
             }

@@ -54,7 +54,6 @@ namespace Microsoft.StreamProcessing
         private int PreCompute()
         {
             Input.Sync.Copy(Sync);
-            Input.Other.Copy(Other);
             Input.BV.Copy(BV);
 
             var period = Period;
@@ -67,13 +66,14 @@ namespace Microsoft.StreamProcessing
             var otherOffset = Other.Offset;
             var isyncOffset = Input.Sync.Offset;
             var syncTime = Input.Sync.Data[isyncOffset];
+            var length = Length;
 
             int previ = -1;
             unsafe
             {
                 fixed (long* bv = Input.BV.Data)
                 {
-                    for (int i = 0; i < Length; i++)
+                    for (int i = 0; i < length; i++)
                     {
                         var ibi = ibvOffset + i;
                         if ((bv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
@@ -113,12 +113,12 @@ namespace Microsoft.StreamProcessing
             var otherOffset = Other.Offset;
             var isyncOffset = Input.Sync.Offset;
             var syncTime = Input.Sync.Data[isyncOffset];
-
+            var length = Length;
             unsafe
             {
                 fixed (long* bv = Input.BV.Data)
                 {
-                    for (int i = 0; i < Length; i++)
+                    for (int i = 0; i < length; i++)
                     {
                         var ibi = ibvOffset + i;
                         if ((bv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)

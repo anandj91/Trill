@@ -49,13 +49,13 @@ namespace Microsoft.StreamProcessing
             var payloadOffset = Payload.Offset;
             var ibvOffset = Input.BV.Offset;
             var obvOffset = BV.Offset;
-
+            var length = Length;
             unsafe
             {
                 fixed (long* ibv = Input.BV.Data)
                 fixed (long* bv = BV.Data)
                 {
-                    for (int i = 0; i < Length; i++)
+                    for (int i = 0; i < length; i++)
                     {
                         var ibi = ibvOffset + i;
                         var obi = obvOffset + i;

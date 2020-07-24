@@ -72,13 +72,15 @@ namespace Microsoft.StreamProcessing
             var rbvOffset = Right.BV.Offset;
             var bvOffset = BV.Offset;
 
+            var rlength = Right.Length;
+
             unsafe
             {
                 fixed (long* lbv = Left.BV.Data)
                 fixed (long* rbv = Right.BV.Data)
                 fixed (long* bv = BV.Data)
                 {
-                    for (int r = 0; r < Right.Length; r++)
+                    for (int r = 0; r < rlength; r++)
                     {
                         var rbi = rbvOffset + r;
                         for (int l = r * factor; l < (r + 1) * factor; l++)

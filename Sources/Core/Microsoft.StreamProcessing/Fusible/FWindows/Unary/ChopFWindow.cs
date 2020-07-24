@@ -51,13 +51,14 @@ namespace Microsoft.StreamProcessing
             var other = Other.Data;
             var otherOffset = Other.Offset;
             var bvOffset = BV.Offset;
+            var length = Length;
 
             int i = 0;
             unsafe
             {
                 fixed (long* bv = BV.Data)
                 {
-                    for (; i < Length && syncTime < _other; i++)
+                    for (; i < length && syncTime < _other; i++)
                     {
                         sync[syncOffset + i] = syncTime;
                         payload[payloadOffset + i] = _payload;
@@ -70,7 +71,7 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (i < Length)
+            if (i < length)
             {
                 var len = Input.Compute();
                 var iperiod = Input.Period;
@@ -86,7 +87,7 @@ namespace Microsoft.StreamProcessing
                     fixed (long* ibv = Input.BV.Data)
                     fixed (long* bv = BV.Data)
                     {
-                        while (i < Length)
+                        while (i < length)
                         {
                             var ibi = ibvOffset + i / factor;
                             if ((ibv[ibi >> 6] & (1L << (ibi & 0x3f))) == 0)
