@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -10,18 +7,26 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class PairFWindow<TPayload, TResult> : UnaryFWindow<TPayload, TResult>
     {
-        private Func<TPayload, TPayload, TResult> _joiner;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="output"></param>
+        public delegate void Joiner(TPayload left, TPayload right, out TResult output);
+
+        private Joiner _joiner;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="input"></param>
         /// <param name="joiner"></param>
-        public PairFWindow(FWindowable<TPayload> input, Expression<Func<TPayload, TPayload, TResult>> joiner)
+        public PairFWindow(FWindowable<TPayload> input, Joiner joiner)
             : base(input, input.Size, input.Period, input.Offset, -1)
         {
             Invariant.IsPositive(input.Duration, "Input duration");
-            _joiner = joiner.Compile();
+            _joiner = joiner;
         }
 
         /// <summary>
@@ -79,7 +84,7 @@ namespace Microsoft.StreamProcessing
                                 var curpi = ipayloadOffset + i;
                                 var pi = payloadOffset + previ;
                                 var otheri = otherOffset + previ;
-                                payload[pi] = _joiner(ipayload[prevpi], ipayload[curpi]);
+                                _joiner(ipayload[prevpi], ipayload[curpi], out payload[pi]);
                                 other[otheri] = syncTime;
                             }
 
@@ -121,7 +126,7 @@ namespace Microsoft.StreamProcessing
                             var curpi = ipayloadOffset + i;
                             var pi = payloadOffset + previ;
                             var otheri = otherOffset + previ;
-                            payload[pi] = _joiner(prevPayload, ipayload[curpi]);
+                            _joiner(prevPayload, ipayload[curpi], out payload[pi]);
                             other[otheri] = syncTime;
                             break;
                         }

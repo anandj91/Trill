@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -10,14 +7,14 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class PairFOperation<TPayload, TResult> : UnaryFOperation<TPayload, TResult>
     {
-        private Expression<Func<TPayload, TPayload, TResult>> _joiner;
+        private PairFWindow<TPayload, TResult>.Joiner _joiner;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="input"></param>
         /// <param name="joiner"></param>
-        public PairFOperation(FOperation<TPayload> input, Expression<Func<TPayload, TPayload, TResult>> joiner)
+        public PairFOperation(FOperation<TPayload> input, PairFWindow<TPayload, TResult>.Joiner joiner)
             : base(input)
         {
             _joiner = joiner;

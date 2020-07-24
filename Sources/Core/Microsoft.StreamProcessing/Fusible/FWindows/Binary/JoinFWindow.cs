@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -11,7 +8,15 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class JoinFWindow<TLeft, TRight, TResult> : BinaryFWindow<TLeft, TRight, TResult>
     {
-        private Func<TLeft, TRight, TResult> _joiner;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="output"></param>
+        public delegate void Joiner(TLeft left, TRight right, out TResult output);
+
+        private Joiner _joiner;
 
         /// <summary>
         /// 
@@ -19,9 +24,8 @@ namespace Microsoft.StreamProcessing
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <param name="joiner"></param>
-        public JoinFWindow(FWindowable<TLeft> left, FWindowable<TRight> right,
-            Expression<Func<TLeft, TRight, TResult>> joiner
-        ) : base(left, right, left.Size, left.Period, left.Offset, left.Duration)
+        public JoinFWindow(FWindowable<TLeft> left, FWindowable<TRight> right, Joiner joiner)
+            : base(left, right, left.Size, left.Period, left.Offset, left.Duration)
         {
             Invariant.IsTrue(right.Offset == left.Offset, "Left offset must match to right offset");
             Invariant.IsTrue(right.Period % left.Period == 0, "Right period must be a multiple of left period");
@@ -29,7 +33,7 @@ namespace Microsoft.StreamProcessing
             Invariant.IsTrue(right.Period == right.Duration, "Right: period and duration must be same");
             Invariant.IsTrue(left.Period == left.Duration, "Left: period and duration must be same");
 
-            _joiner = joiner.Compile();
+            _joiner = joiner;
 
             _Payload = new FSubWindow<TResult>(Length);
             _Sync = Left.Sync as FSubWindow<long>;
@@ -87,7 +91,7 @@ namespace Microsoft.StreamProcessing
                                 var lp = lpayload[lpayloadOffset + l];
                                 var rp = rpayload[rpayloadOffset + r];
                                 var po = payloadOffset + l;
-                                payload[po] = _joiner(lp, rp);
+                                _joiner(lp, rp, out payload[po]);
                                 bv[bi >> 6] &= ~(1L << (bi & 0x3f));
                             }
                             else

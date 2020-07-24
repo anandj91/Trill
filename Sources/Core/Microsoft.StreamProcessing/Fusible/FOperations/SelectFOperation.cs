@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -10,12 +7,13 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class SelectFOperation<TPayload, TResult> : UnaryFOperation<TPayload, TResult>
     {
-        private Expression<Func<long, TPayload, TResult>> _selector;
+        private SelectFWindow<TPayload, TResult>.Selector _selector;
 
         /// <summary>
         /// 
         /// </summary>
-        public SelectFOperation(FOperation<TPayload> input, Expression<Func<long, TPayload, TResult>> selector) : base(input)
+        public SelectFOperation(FOperation<TPayload> input, SelectFWindow<TPayload, TResult>.Selector selector)
+            : base(input)
         {
             _selector = selector;
         }

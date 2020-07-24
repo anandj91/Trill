@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <returns></returns>
         public static FOperation<TResult> Select<TPayload, TResult>(
             this FOperation<TPayload> source,
-            Expression<Func<long, TPayload, TResult>> selector
+            SelectFWindow<TPayload, TResult>.Selector selector
         )
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         public static FOperation<TResult> Join<TLeft, TRight, TResult>(
             this FOperation<TLeft> left,
             FOperation<TRight> right,
-            Expression<Func<TLeft, TRight, TResult>> joiner
+            JoinFWindow<TLeft, TRight, TResult>.Joiner joiner
         )
         {
             Invariant.IsNotNull(left, nameof(left));
@@ -127,7 +127,7 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// <returns></returns>
         public static FOperation<TResult> ConsecutivePairs<TPayload, TResult>(
             this FOperation<TPayload> input,
-            Expression<Func<TPayload, TPayload, TResult>> joiner
+            PairFWindow<TPayload, TResult>.Joiner joiner
         )
         {
             return new PairFOperation<TPayload, TResult>(input, joiner);

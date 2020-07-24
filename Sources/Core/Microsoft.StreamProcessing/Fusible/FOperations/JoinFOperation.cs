@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -11,7 +8,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class JoinFOperation<TLeft, TRight, TResult> : BinaryFOperation<TLeft, TRight, TResult>
     {
-        private Expression<Func<TLeft, TRight, TResult>> _joiner;
+        private JoinFWindow<TLeft, TRight, TResult>.Joiner _joiner;
 
         /// <summary>
         /// 
@@ -20,7 +17,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="right"></param>
         /// <param name="joiner"></param>
         public JoinFOperation(FOperation<TLeft> left, FOperation<TRight> right,
-            Expression<Func<TLeft, TRight, TResult>> joiner
+            JoinFWindow<TLeft, TRight, TResult>.Joiner joiner
         ) : base(left, right)
         {
             _joiner = joiner;

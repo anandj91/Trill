@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
@@ -10,15 +7,23 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TResult"></typeparam>
     public class SelectFWindow<TPayload, TResult> : UnaryFWindow<TPayload, TResult>
     {
-        private Func<long, TPayload, TResult> _selector;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ts"></param>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        public delegate void Selector(long ts, TPayload input, out TResult output);
+        
+        private Selector _selector;
 
         /// <summary>
         /// 
         /// </summary>
-        public SelectFWindow(FWindowable<TPayload> input, Expression<Func<long, TPayload, TResult>> selector)
+        public SelectFWindow(FWindowable<TPayload> input, Selector selector)
             : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
-            _selector = selector.Compile();
+            _selector = selector;
             _Payload = new FSubWindow<TResult>(Length);
             _Sync = Input.Sync as FSubWindow<long>;
             _Other = Input.Other as FSubWindow<long>;
@@ -48,6 +53,7 @@ namespace Microsoft.StreamProcessing
             var opayload = Payload.Data;
             var opayloadOffset = Payload.Offset;
             var ibvOffset = Input.BV.Offset;
+            var syncTime = SyncTime;
 
             unsafe
             {
@@ -60,13 +66,15 @@ namespace Microsoft.StreamProcessing
                         {
                             var pi = ipayloadOffset + i;
                             var po = opayloadOffset + i;
-                            opayload[po] = _selector(SyncTime, ipayload[pi]);
+                            _selector(SyncTime, ipayload[pi], out opayload[po]);
                         }
 
-                        SyncTime += period;
+                        syncTime += period;
                     }
                 }
             }
+
+            SyncTime = syncTime;
 
             return len;
         }
