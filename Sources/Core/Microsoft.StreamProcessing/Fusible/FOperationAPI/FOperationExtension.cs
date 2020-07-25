@@ -137,6 +137,19 @@ namespace Microsoft.StreamProcessing.FOperationAPI
         /// 
         /// </summary>
         /// <param name="input"></param>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <returns></returns>
+        public static FOperation<TPayload> ClipEventDuration<TPayload>(
+            this FOperation<TPayload> input
+        )
+        {
+            return new ClipFOperation<TPayload>(input);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="input"></param>
         /// <param name="period"></param>
         /// <typeparam name="TPayload"></typeparam>
         /// <returns></returns>
