@@ -238,7 +238,7 @@ namespace Microsoft.StreamProcessing
             else
             {
                 // Finish previous bucket
-                if (prevBucket > 0)
+                if (prevBucket >= 0)
                 {
                     this.Count += (int) (((prevBucket + 1) * Config.DataGranularity - this.vsync.col[this.Count - 1]) /
                                          period) - 1;

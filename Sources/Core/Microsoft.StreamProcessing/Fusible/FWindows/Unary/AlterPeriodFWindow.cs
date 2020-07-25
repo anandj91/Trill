@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
             var otherOffset = Other.Offset;
             var bvOffset = BV.Offset;
             var iperiod = Input.Period;
-            int factor = (int) (iperiod / period);
+            int factor = (int) (period / iperiod);
             var ipayload = Input.Payload.Data;
             var ipayloadOffset = Input.Payload.Offset;
             var ibvOffset = Input.BV.Offset;
