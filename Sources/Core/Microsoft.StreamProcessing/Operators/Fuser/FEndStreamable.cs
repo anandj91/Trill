@@ -39,7 +39,7 @@ namespace Microsoft.StreamProcessing
             this.output.Allocate();
 
             var fwindow = fop.Compile(0, fop.Size * Config.FuseFactor);
-            Config.DataGranularity = fwindow.Size;
+            //Config.DataGranularity = fwindow.Size;
             Console.WriteLine("Window size: {0}", fwindow.Size);
             owindow = new OutputFWindow<TResult>(fwindow);
         }

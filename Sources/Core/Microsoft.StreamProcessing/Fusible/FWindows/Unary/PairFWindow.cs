@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
             var other = Other.Data;
             var otherOffset = Other.Offset;
             var isyncOffset = Input.Sync.Offset;
-            var syncTime = Input.Sync.Data[isyncOffset];
+            long syncTime = -1;
             var length = Length;
 
             int previ = -1;
@@ -87,6 +87,10 @@ namespace Microsoft.StreamProcessing
                                 _joiner(ipayload[prevpi], ipayload[curpi], out payload[pi]);
                                 other[otheri] = syncTime;
                             }
+                            else
+                            {
+                                syncTime = Input.Sync.Data[isyncOffset + i];
+                            }
 
                             previ = i;
                         }
@@ -103,7 +107,6 @@ namespace Microsoft.StreamProcessing
 
         private void PostCompute(TPayload prevPayload, int previ)
         {
-            var period = Period;
             var ipayload = Input.Payload.Data;
             var ipayloadOffset = Input.Payload.Offset;
             var payload = Payload.Data;
@@ -112,7 +115,6 @@ namespace Microsoft.StreamProcessing
             var other = Other.Data;
             var otherOffset = Other.Offset;
             var isyncOffset = Input.Sync.Offset;
-            var syncTime = Input.Sync.Data[isyncOffset];
             var length = Length;
             unsafe
             {
@@ -125,13 +127,10 @@ namespace Microsoft.StreamProcessing
                         {
                             var curpi = ipayloadOffset + i;
                             var pi = payloadOffset + previ;
-                            var otheri = otherOffset + previ;
                             _joiner(prevPayload, ipayload[curpi], out payload[pi]);
-                            other[otheri] = syncTime;
+                            other[otherOffset + previ] = Input.Sync.Data[isyncOffset + i];
                             break;
                         }
-
-                        syncTime += period;
                     }
                 }
             }

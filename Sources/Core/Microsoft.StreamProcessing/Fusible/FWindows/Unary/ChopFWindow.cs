@@ -128,6 +128,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override bool _Slide(long tsync)
         {
+            tsync = SyncTime > tsync ? SyncTime : tsync;
             var ot = (_other / Size) * Size;
             var ret = true;
             if (ot <= tsync)
