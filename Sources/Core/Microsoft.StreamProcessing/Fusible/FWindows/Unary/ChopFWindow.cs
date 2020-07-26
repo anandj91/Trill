@@ -74,6 +74,7 @@ namespace Microsoft.StreamProcessing
             if (i < length)
             {
                 var len = Input.Compute();
+                syncTime = Input.SyncTime - Input.Size;
                 var iperiod = Input.Period;
                 int factor = (int) (iperiod / period);
                 var ipayload = Input.Payload.Data;

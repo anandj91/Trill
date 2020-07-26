@@ -37,8 +37,8 @@ namespace Microsoft.StreamProcessing
         {
             _BV.Unset();
 
-            var syncTime = Input.SyncTime;
             var len = Input.Compute();
+            var syncTime = Input.SyncTime - Input.Size;
 
             var period = Period;
             var payload = Payload.Data;

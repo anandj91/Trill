@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="input"></param>
         /// <param name="output"></param>
         public delegate void Selector(long ts, TPayload input, out TResult output);
-        
+
         private Selector _selector;
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing
             var opayload = Payload.Data;
             var opayloadOffset = Payload.Offset;
             var ibvOffset = Input.BV.Offset;
-            var syncTime = SyncTime;
+            var syncTime = Input.SyncTime - Input.Size;
             var length = Length;
 
             unsafe

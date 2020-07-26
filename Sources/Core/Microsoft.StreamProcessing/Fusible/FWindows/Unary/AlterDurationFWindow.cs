@@ -42,8 +42,8 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override int _Compute()
         {
-            var syncTime = Input.SyncTime;
             var len = Input.Compute();
+            var syncTime = Input.SyncTime - Input.Size;
 
             var period = Input.Period;
             var iother = Input.Other.Data;

@@ -6,6 +6,8 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TPayload"></typeparam>
     public class MulticastFWindow<TPayload> : UnaryFWindow<TPayload, TPayload>
     {
+        private bool _hasInit;
+        private bool _init;
         private bool _isComputed;
         private int _len;
         private bool _hasSlid;
@@ -18,6 +20,8 @@ namespace Microsoft.StreamProcessing
         public MulticastFWindow(FWindowable<TPayload> input)
             : base(input, input.Size, input.Period, input.Offset, input.Duration)
         {
+            _hasInit = false;
+            _init = false;
             _isComputed = false;
             _len = -1;
             _hasSlid = false;
@@ -33,9 +37,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         protected override bool _Init()
         {
-            var ret = Input.Init();
-            SyncTime = Input.SyncTime;
-            return ret;
+            if (!_hasInit)
+            {
+                _init = Input.Init();
+                SyncTime = Input.SyncTime;
+                _hasInit = true;
+            }
+
+            return _init;
         }
 
         /// <summary>
@@ -62,7 +71,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         protected override bool _Slide(long tsync)
         {
-            if (!_hasSlid)
+            if (tsync > SyncTime || !_hasSlid)
             {
                 _slide = Input.Slide(tsync);
                 _hasSlid = true;

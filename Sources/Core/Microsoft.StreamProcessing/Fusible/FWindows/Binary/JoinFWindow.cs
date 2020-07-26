@@ -47,6 +47,18 @@ namespace Microsoft.StreamProcessing
         protected override bool _Init()
         {
             var ret = Left.Init() && Right.Init();
+            while (ret && Left.SyncTime != Right.SyncTime)
+            {
+                if (Right.SyncTime < Left.SyncTime)
+                {
+                    ret &= Right.Slide(Left.SyncTime);
+                }
+                else
+                {
+                    ret &= Left.Slide(Right.SyncTime);
+                }
+            }
+
             SyncTime = Left.SyncTime;
             return ret;
         }
