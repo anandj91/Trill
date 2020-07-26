@@ -71,7 +71,16 @@ namespace Microsoft.StreamProcessing
                 len = 0;
             }
 
-            return s + len;
+            var shift = s + len;
+
+            if (Idx + shift > 0 && _batch.vsync.col[Idx + shift - 1] == tsync)
+            {
+                return shift - 1;
+            }
+            else
+            {
+                return shift;
+            }
         }
 
         /// <summary>

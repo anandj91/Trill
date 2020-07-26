@@ -48,23 +48,22 @@ namespace Microsoft.StreamProcessing
         {
             this.Observer = observer;
             owindow.SetBatch(this.output);
-            if (!owindow.Init())
+            if (owindow.Init())
             {
-                throw new Exception("Fused window init failed");
+                int len = 0;
+                do
+                {
+                    len = owindow.Compute();
+                    if (this.output.Count > Config.DataBatchSize - owindow.Length)
+                    {
+                        FlushContents();
+                        owindow.SetBatch(this.output);
+                    }
+                } while (owindow.Slide(owindow.SyncTime));
+
+                FlushContents();
             }
 
-            int len = 0;
-            do
-            {
-                len = owindow.Compute();
-                if (this.output.Count > Config.DataBatchSize - owindow.Length)
-                {
-                    FlushContents();
-                    owindow.SetBatch(this.output);
-                }
-            } while (owindow.Slide(owindow.SyncTime));
-
-            FlushContents();
             observer.OnCompleted();
             return default;
         }
