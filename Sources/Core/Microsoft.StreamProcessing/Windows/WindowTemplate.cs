@@ -831,6 +831,15 @@ namespace Microsoft.StreamProcessing
             var aggregate = new ProductComplexAggregate();
             return aggregate.MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
+        
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over sbytes using snapshot semantics. Note that the accumulator
+        /// internally is a long datatype.
+        /// </summary>
+        public IAggregate<float, StdScore, StdScore> StdScore()
+        {
+            return new StdScoreAggregate();
+        }
 
         /// <summary>
         /// Computes a time-sensitive average aggregate over sbytes using snapshot semantics. Note that the accumulator
