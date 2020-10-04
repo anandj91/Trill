@@ -18,6 +18,7 @@ namespace Microsoft.StreamProcessing
         private Func<TAggState, TAggState, TAggState> _diff;
         private Func<TAggState, TResult> _res;
         private TAggState[] _states;
+        private TAggState _state;
         private int _idx;
 
         /// <summary>
@@ -61,6 +62,8 @@ namespace Microsoft.StreamProcessing
                 _states[i] = _init();
             }
 
+            _state = _init();
+
             return ret;
         }
 
@@ -92,7 +95,7 @@ namespace Microsoft.StreamProcessing
                 fixed (long* ibv = Input.BV.Data)
                 fixed (long* bv = _BV.Data)
                 {
-                    TAggState state = _states[_idx];
+                    TAggState state = _init();
                     for (int j = 0; j < length; j++)
                     {
                         bool hasResult = false;
@@ -104,15 +107,18 @@ namespace Microsoft.StreamProcessing
                                 var ipi = ipayloadOffset + i;
                                 var item = ipayload[ipi];
                                 state = _acc(state, syncTime + i * iperiod, item);
+                                _state = _acc(_state, syncTime + i * iperiod, item);
                                 hasResult = true;
                             }
                         }
 
                         var bi = bvOffset + j;
+                        _states[_idx] = state;
                         _idx = (_idx + 1) % _states.Length;
+                        _state = _diff(_state, _states[_idx]);
                         if (hasResult)
                         {
-                            payload[payloadOffset + j] = _res(_diff(state, _states[_idx]));
+                            payload[payloadOffset + j] = _res(_state);
                             _Sync.Data[syncOffset + j] = syncTime;
                             _Other.Data[otherOffset + j] = syncTime + period;
                             bv[bi >> 6] &= ~(1L << (bi & 0x3f));
@@ -122,7 +128,6 @@ namespace Microsoft.StreamProcessing
                             bv[bi >> 6] |= (1L << (bi & 0x3f));
                         }
 
-                        _states[_idx] = state;
                         syncTime += period;
                     }
                 }
