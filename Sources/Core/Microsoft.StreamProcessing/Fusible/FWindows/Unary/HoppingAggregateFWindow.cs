@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
             _acc = _aggregate.Accumulate().Compile();
             _diff = aggregate.Difference().Compile();
             _res = _aggregate.ComputeResult().Compile();
-            _states = new TAggState[window / period];
+            _states = new TAggState[(window / period) + 1];
             _idx = -1;
             _BV = new BVFSubWindow(Length);
         }
