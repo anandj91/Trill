@@ -95,10 +95,10 @@ namespace Microsoft.StreamProcessing
                 fixed (long* ibv = Input.BV.Data)
                 fixed (long* bv = _BV.Data)
                 {
-                    TAggState state = _init();
                     for (int j = 0; j < length; j++)
                     {
                         bool hasResult = false;
+                        TAggState state = _init();
                         for (int i = j * factor; i < (j + 1) * factor; i++)
                         {
                             var ibi = ibvOffset + i;
