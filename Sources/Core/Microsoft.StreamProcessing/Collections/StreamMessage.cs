@@ -218,60 +218,6 @@ namespace Microsoft.StreamProcessing
             AssignPayloadPool(memPool);
         }
 
-        private bool CheckAndAllocate(long vsync, long vother)
-        {
-            long period = vother - vsync; // Proxy to period
-            long curBucket = (vsync / Config.DataGranularity);
-            long prevBucket = -1;
-            if (this.Count > 0)
-            {
-                prevBucket = (this.vsync.col[this.Count - 1] / Config.DataGranularity);
-            }
-
-            if (curBucket == prevBucket)
-            {
-                // Correct the Count
-                var prevSync = this.vsync.col[this.Count - 1];
-                int len = (int) ((vsync - prevSync) / period - 1);
-                this.Count += len;
-            }
-            else
-            {
-                // Finish previous bucket
-                if (prevBucket >= 0)
-                {
-                    this.Count += (int) (((prevBucket + 1) * Config.DataGranularity - this.vsync.col[this.Count - 1]) /
-                                         period) - 1;
-                }
-
-                // Check if new bucket can be allocated
-                if (this.vsync.col.Length - this.Count < (Config.DataGranularity / period))
-                {
-                    return false;
-                }
-
-                // Allocate current bucket
-                var startSync = curBucket * Config.DataGranularity;
-                var endSync = (curBucket + 1) * Config.DataGranularity;
-                var count = this.Count;
-                while (startSync < endSync)
-                {
-                    this.vsync.col[count] = startSync;
-                    this.vother.col[count] = startSync + period;
-                    this.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-                    count++;
-                    if (startSync < vsync)
-                    {
-                        this.Count++;
-                    }
-
-                    startSync += period;
-                }
-            }
-
-            return true;
-        }
-
         /// <summary>
         /// Adds a single row to the StreamMessage.
         /// </summary>
@@ -285,19 +231,13 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(!this.IsSealed);
 
-            if (!CheckAndAllocate(vsync, vother))
-            {
-                return false;
-            }
-
             this.vsync.col[this.Count] = vsync;
             this.vother.col[this.Count] = vother;
             if (this.key != null) this.key.col[this.Count] = key;
             if (this.payload != null) this.payload.col[this.Count] = payload;
             this.hash.col[this.Count] = IsPartitioned ? HashCode(key) : 0;
-            this.bitvector.col[this.Count >> 6] &= ~(1L << (this.Count & 0x3f));
             this.Count++;
-            return true;
+            return this.Count == this.vsync.col.Length;
         }
 
         /// <summary>
@@ -693,29 +633,15 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(!this.IsSealed);
 
-            // Finish previous bucket
-            if (this.Count > 0)
-            {
-                var prevBucket = this.vsync.col[this.Count - 1] / Config.DataGranularity;
-                var period = this.vother.col[this.Count - 1] - this.vsync.col[this.Count - 1]; // proxy to period
-                this.Count += (int) (((prevBucket + 1) * Config.DataGranularity - this.vsync.col[this.Count - 1]) /
-                                     period) - 1;
-            }
+            this.vsync.col[this.Count] = vsync;
+            this.vother.col[this.Count] = StreamEvent.PunctuationOtherTime;
+            if (this.key != null) this.key.col[this.Count] = default;
+            if (this.payload != null) this.payload.col[this.Count] = default;
+            this.hash.col[this.Count] = 0;
+            this.bitvector.col[this.Count >> 6] |= 1L << (this.Count & 0x3f);
 
-            if (this.Count >= this.vsync.col.Length) return false;
-
-            while (this.Count < this.vsync.col.Length)
-            {
-                this.vsync.col[this.Count] = vsync;
-                this.vother.col[this.Count] = StreamEvent.PunctuationOtherTime;
-                if (this.key != null) this.key.col[this.Count] = default;
-                if (this.payload != null) this.payload.col[this.Count] = default;
-                this.hash.col[this.Count] = 0;
-                this.bitvector.col[this.Count >> 6] |= 1L << (this.Count & 0x3f);
-                this.Count++;
-            }
-
-            return true;
+            this.Count++;
+            return this.Count == this.vsync.col.Length;
         }
 
         /// <summary>

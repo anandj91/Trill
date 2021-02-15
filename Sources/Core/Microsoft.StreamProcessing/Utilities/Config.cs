@@ -45,8 +45,6 @@ namespace Microsoft.StreamProcessing
         private static bool clearColumnsOnReturn = false;
         private static bool disableMemoryPooling = false;
         private static int dataBatchSize = 80000;
-        private static long dataGranularity = 1;
-        private static int fuseFactor = 10;
         private static bool useMultiString = false;
         private static SortingTechnique ingressSortingTechnique = SortingTechnique.ImpatienceSort;
         private static CodegenOptions.MultiStringFlags useMultiStringTransforms = CodegenOptions.MultiStringFlags.None;
@@ -199,39 +197,6 @@ namespace Microsoft.StreamProcessing
 
                 TraceConfigChanges("DataBatchSize", dataBatchSize, value);
                 dataBatchSize = value;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static long DataGranularity
-        {
-            get => dataGranularity;
-            set
-            {
-                // Needs to be non-zero
-                Invariant.IsTrue(value > 0 && value <= dataBatchSize,
-                    "Set batch size higher than data granularity " + value);
-
-                TraceConfigChanges("DataGranularity", dataGranularity, value);
-                dataGranularity = value;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static int FuseFactor
-        {
-            get => fuseFactor;
-            set
-            {
-                // Needs to be non-zero
-                Contract.Requires(value > 0);
-
-                TraceConfigChanges("FuseFactor", fuseFactor, value);
-                fuseFactor = value;
             }
         }
 
